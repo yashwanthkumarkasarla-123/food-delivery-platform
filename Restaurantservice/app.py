@@ -7,7 +7,7 @@ import time
 app = Flask(__name__)
 CORS(app)
 
-# Security: Rate Limiter (Relaxed for development)
+# Security: Rate Limiter (Relaxed for development testing)
 limiter = Limiter(
     key_func=get_remote_address,
     app=app,
@@ -40,17 +40,6 @@ restaurants = [
         ]
     },
     {
-        "id": 3, 
-        "name": "Kalinga Dhaba", 
-        "location": "Kazipet", "rating": 4.0,
-        "tags": ["Spicy Tandoori"],
-        "menu": [
-            {"id": "kd1", "item": "Tandoori Chicken", "price": 320},
-            {"id": "kd2", "item": "Mixed Veg Curry", "price": 190},
-            {"id": "kd3", "item": "Jeera Rice", "price": 150}
-        ]
-    },
-    {
         "id": 4, 
         "name": "Sri Geetha Bhavan", 
         "location": "Hanamkonda", "rating": 4.3,
@@ -63,14 +52,10 @@ restaurants = [
     }
 ]
 
-# 2. DATABASE: Orders & Riders
+# 2. IN-MEMORY STORE: Orders
 orders = []
-riders = [
-    {"id": "rider1", "name": "Rajesh", "status": "IDLE", "location": "Hanamkonda"},
-    {"id": "rider2", "name": "Suresh", "status": "IDLE", "location": "Kazipet"}
-]
 
-# --- ENDPOINTS ---
+# --- CUSTOMER ENDPOINTS ---
 
 @app.route("/restaurants", methods=["GET"])
 def get_restaurants():
@@ -86,46 +71,50 @@ def place_order():
         "items": data.get("items", []),
         "total": sum(item['price'] for item in data.get("items", [])),
         "status": "PENDING_RESTAURANT",
-        "created_at": time.time(), # Order start time
-        "assigned_rider": None,
-        "rider_alert_time": None
+        "created_at": time.time(), # Order start timestamp
+        "assigned_rider": None
     }
     orders.append(new_order)
     return jsonify(new_order), 201
 
+# --- RESTAURANT OWNER ENDPOINTS ---
+
+@app.route("/restaurant/manage-orders", methods=["GET"])
+def manage_orders():
+    """Admin page calls this to see alerts."""
+    # We clean up or flag expired orders here
+    current_time = time.time()
+    for o in orders:
+        if o['status'] == 'PENDING_RESTAURANT' and (current_time - o['created_at']) > 300:
+            o['status'] = 'AUTO_REJECTED'
+            
+    # Return only active pending orders
+    pending = [o for o in orders if o['status'] == 'PENDING_RESTAURANT']
+    return jsonify(pending)
+
 @app.route("/restaurant/action", methods=["POST"])
 def restaurant_action():
-    """Restaurant accepts or rejects. Logic: Must be within 5 mins."""
+    """Restaurant accepts or rejects."""
     data = request.json
     order_id = data.get("order_id")
     action = data.get("action") # 'ACCEPT' or 'REJECT'
     
     for order in orders:
         if order["order_id"] == order_id:
-            # Check if 5 minutes (300 seconds) have passed
+            # Check if 5 minutes expired
             if time.time() - order["created_at"] > 300:
                 order["status"] = "AUTO_REJECTED"
                 return jsonify({"error": "Time expired (5 min). Order cancelled."}), 400
             
             if action == "ACCEPT":
                 order["status"] = "PREPARING"
-                order["rider_alert_time"] = time.time() # Start 1-min Rider Timer
-                return jsonify({"message": "Order accepted! Finding rider..."})
+                return jsonify({"message": "Order accepted! Kitchen notified."})
             else:
                 order["status"] = "REJECTED_BY_RES"
                 return jsonify({"message": "Order rejected by restaurant."})
                 
     return jsonify({"error": "Order not found"}), 404
 
-@app.route("/rider/status", methods=["GET"])
-def get_rider_alerts():
-    """Riders check this to see if they have 1 min to accept an order."""
-    current_time = time.time()
-    for order in orders:
-        if order["status"] == "PREPARING" and not order["assigned_rider"]:
-            # If 1 min (60s) passed, we would normally reassign.
-            return jsonify({"order_id": order["order_id"], "time_left": 60 - (current_time - order["rider_alert_time"])})
-    return jsonify({"message": "No pending pickups"})
-
 if __name__ == "__main__":
+    # Ensure it listens on 0.0.0.0 for Azure Container App compatibility
     app.run(host="0.0.0.0", port=5000)
