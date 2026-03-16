@@ -1,9 +1,9 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import time
 
 app = Flask(__name__)
-CORS(app)
+# This line is the most important fix:
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # In-memory database
 restaurants = [
