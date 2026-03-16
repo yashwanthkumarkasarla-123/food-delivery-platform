@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Warangal Eats | Rider App</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #222; color: white; }
+        .order-card { background: #333; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid #60b246; }
+        button { background: #60b246; color: white; border: none; padding: 10px; width: 100%; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Rider Dashboard (Warangal)</h1>
+    <div id="available-orders">Scanning for ready orders...</div>
+
+    <script>
+        const API = 'https://restaurant-app.grayplant-35e8185c.centralus.azurecontainerapps.io';
+        
+        async function fetchRiderOrders() {
+            const res = await fetch(`${API}/restaurants`); // Simplified for demo
+            // In a real app, you'd fetch orders with status 'PREPARING'
+            document.getElementById('available-orders').innerHTML = `
+                <div class="order-card">
+                    <h3>New Delivery Alert!</h3>
+                    <p>Pickup: Papadams Blue, Hanamkonda</p>
+                    <p>Time Left to Claim: 60s</p>
+                    <button onclick="claimOrder(1)">ACCEPT PICKUP</button>
+                </div>
+            `;
+        }
+
+        async function claimOrder(id) {
+            await fetch(`${API}/rider/claim`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ order_id: id, rider_name: "Rajesh (Warangal Rider #12)" })
+            });
+            alert("Order Claimed! Customer is tracking you now.");
+        }
+        
+        setInterval(fetchRiderOrders, 5000);
+    </script>
+</body>
+</html>
