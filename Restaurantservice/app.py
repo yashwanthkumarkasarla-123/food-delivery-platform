@@ -4,9 +4,10 @@ from flask import Flask, jsonify
 app = Flask(__name__)
 
 restaurants = [
-    {"id": 1, "name": "Pizza Hub", "rating": 4.5},
-    {"id": 2, "name": "Burger Town", "rating": 4.2},
-    {"id": 3, "name": "South Indian Meals", "rating": 4.8}
+    {"id": 1, "name": "Papadams Blue", "location": "Hanamkonda", "rating": 4.4, "tags": ["Biryani", "South Indian"]},
+    {"id": 2, "name": "Kritunga Restaurant", "location": "Subedari", "rating": 5.0, "tags": ["Authentic Telugu"]},
+    {"id": 3, "name": "Kalinga Dhaba", "location": "Kazipet", "rating": 4.0, "tags": ["Spicy", "Tandoori"]},
+    {"id": 4, "name": "Sri Geetha Bhavan", "location": "Hanamkonda", "rating": 4.3, "tags": ["Veg", "Udupi"]},
 ]
 
 @app.route("/restaurants")
