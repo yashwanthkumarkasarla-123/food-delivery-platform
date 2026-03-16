@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Restaurant Owner Dashboard</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+        .order-card { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; border-left: 5px solid #fc8019; }
+        .timer { font-weight: bold; color: red; font-size: 20px; }
+        .btn-accept { background: #60b246; color: white; padding: 10px; border: none; cursor: pointer; }
+        .btn-reject { background: #ff4d4d; color: white; padding: 10px; border: none; cursor: pointer; margin-left: 10px; }
+    </style>
+</head>
+<body>
+    <h1>New Order Alerts 🔔</h1>
+    <div id="alerts-container">Checking for orders...</div>
+
+    <script>
+        const API_URL = 'https://restaurant-app.grayplant-35e8185c.centralus.azurecontainerapps.io';
+
+        async function checkOrders() {
+            try {
+                const res = await fetch(`${API_URL}/restaurant/manage-orders`);
+                const orders = await res.json();
+                const container = document.getElementById('alerts-container');
+
+                if (orders.length === 0) {
+                    container.innerHTML = "No pending orders.";
+                    return;
+                }
+
+                container.innerHTML = orders.map(order => {
+                    // Calculate remaining time for the 5-min rule
+                    const timeElapsed = Math.floor(Date.now() / 1000 - order.created_at);
+                    const timeLeft = Math.max(0, 300 - timeElapsed);
+                    
+                    return `
+                        <div class="order-card">
+                            <h3>Order #${order.order_id}</h3>
+                            <p>Items: ${order.items.map(i => i.name).join(', ')}</p>
+                            <p>Total: ₹${order.total}</p>
+                            <div class="timer">Time Remaining: ${Math.floor(timeLeft / 60)}m ${timeLeft % 60}s</div>
+                            <br>
+                            <button class="btn-accept" onclick="respond(${order.order_id}, 'ACCEPT')">ACCEPT</button>
+                            <button class="btn-reject" onclick="respond(${order.order_id}, 'REJECT')">REJECT</button>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) { console.error("Polling error", e); }
+        }
+
+        async function respond(orderId, action) {
+            const res = await fetch(`${API_URL}/restaurant/action`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ order_id: orderId, action: action })
+            });
+            const data = await res.json();
+            alert(data.message || data.error);
+            checkOrders();
+        }
+
+        // Auto-refresh every 5 seconds to check for new alerts
+        setInterval(checkOrders, 5000);
+        checkOrders();
+    </script>
+</body>
+</html>
