@@ -3,144 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warangal Eats - Swiggy Pro</title>
+    <title>Warangal Eats | Swiggy Replica</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --swiggy-orange: #fc8019; --text-main: #282c3f; --dark-bg: #161a20; }
-        body { font-family: 'Outfit', sans-serif; margin: 0; background-color: #f7f7f7; color: var(--text-main); }
+        :root { --swiggy-orange: #fc8019; --text-main: #282c3f; --bg: #f7f7f7; }
+        body { font-family: 'Outfit', sans-serif; margin: 0; background-color: var(--bg); color: var(--text-main); }
         
-        /* Navigation */
         nav { padding: 15px 10%; display: flex; justify-content: space-between; align-items: center; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
-        .logo { color: var(--swiggy-orange); font-size: 26px; font-weight: 800; }
-        .nav-links span { margin-left: 20px; cursor: pointer; font-weight: 600; }
+        .logo { color: var(--swiggy-orange); font-size: 26px; font-weight: 800; text-decoration: none; }
 
-        /* Container */
         .container { max-width: 1200px; margin: 40px auto; display: grid; grid-template-columns: 3fr 1fr; gap: 30px; padding: 0 20px; }
         
-        /* Restaurant Cards */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; }
-        .card { background: white; border-radius: 16px; overflow: hidden; transition: 0.3s; cursor: pointer; border: 1px solid #eee; }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .card img { width: 100%; height: 180px; object-fit: cover; }
-        .card-body { padding: 15px; }
+        /* Menu & Grid */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
+        .card { background: white; border-radius: 16px; overflow: hidden; cursor: pointer; border: 1px solid #eee; transition: 0.3s; }
+        .card:hover { transform: scale(0.98); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .card img { width: 100%; height: 160px; object-fit: cover; }
+        .card-info { padding: 15px; }
 
-        /* Sidebar Cart */
+        .menu-list { background: white; padding: 20px; border-radius: 16px; }
+        .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
+        .add-btn { color: #60b246; border: 1px solid #bebfc5; background: white; padding: 8px 25px; font-weight: 700; cursor: pointer; border-radius: 4px; }
+        .add-btn:hover { box-shadow: 0 3px 8px #e9e9eb; }
+
+        /* Cart */
         .sidebar { background: white; padding: 20px; border-radius: 16px; height: fit-content; position: sticky; top: 100px; }
-        .btn-order { background: var(--swiggy-orange); color: white; border: none; padding: 15px; width: 100%; font-weight: 700; border-radius: 8px; cursor: pointer; margin-top: 15px; }
-
-        /* Modal */
-        #review-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.3); z-index: 2000; }
+        .btn-checkout { background: var(--swiggy-orange); color: white; border: none; padding: 15px; width: 100%; font-weight: 700; border-radius: 8px; cursor: pointer; margin-top: 20px; }
+        
+        .back-btn { margin-bottom: 20px; cursor: pointer; color: var(--swiggy-orange); font-weight: 600; display: inline-block; }
     </style>
 </head>
 <body>
 
 <nav>
-    <div class="logo">WARANGAL EATS</div>
-    <div class="nav-links">
-        <span onclick="showOnboardingForm()" style="color: var(--swiggy-orange);">Partner with Us</span>
-        <span onclick="showRestaurantPanel()">Admin Login</span>
-    </div>
+    <a href="#" class="logo" onclick="location.reload()">WARANGAL EATS</a>
+    <div>Search | Offers | Help</div>
 </nav>
 
 <div class="container">
-    <div class="main">
-        <h2 id="view-title">Top Rated in Warangal</h2>
-        <div id="restaurant-list" class="grid">
-            <p>Fetching fresh data from Azure servers...</p>
+    <div class="main-content" id="main-view">
+        <h2>Restaurants in Warangal</h2>
+        <div id="restaurant-grid" class="grid">
+            <p>Loading the best tastes of Warangal...</p>
         </div>
     </div>
 
     <div class="sidebar">
-        <h3>Your Cart</h3>
-        <div id="cart-items"><p style="color: gray;">Add a delicious meal!</p></div>
-        <hr>
-        <p><strong>Payment:</strong> Cash on Delivery</p>
-        <button class="btn-order" onclick="placeOrder()">PLACE ORDER</button>
+        <h3>Cart</h3>
+        <div id="cart-content">Your cart is empty.</div>
+        <div id="cart-total" style="margin-top: 15px; font-weight: 800;"></div>
+        <button class="btn-checkout" onclick="checkout()">CHECKOUT (COD)</button>
     </div>
 </div>
 
-<div id="onboarding-modal" style="display:none; position:fixed; top:50%; left:50%; transform: translate(-50%, -50%); background:white; padding:30px; border-radius:15px; box-shadow: 0 0 20px rgba(0,0,0,0.2); z-index:3000;">
-    <h3>Register Restaurant</h3>
-    <input type="text" id="reg-name" placeholder="Name" style="width:100%; margin:10px 0;"><br>
-    <input type="text" id="reg-loc" placeholder="Location" style="width:100%; margin:10px 0;"><br>
-    <button onclick="submitRegistration()" class="btn-order">Submit</button>
-    <button onclick="document.getElementById('onboarding-modal').style.display='none'" style="border:none; background:none; cursor:pointer; width:100%; margin-top:10px;">Close</button>
-</div>
-
-<div id="review-modal">
-    <h2>Enjoy your meal! 🍛</h2>
-    <p>Please rate your Warangal Eats experience.</p>
-    <div style="font-size: 30px; margin: 20px;">⭐⭐⭐⭐⭐</div>
-    <button class="btn-order" onclick="location.reload()">Back to Home</button>
-</div>
-
 <script>
-    let cart = [];
     const BASE_URL = 'https://restaurant-app.grayplant-35e8185c.centralus.azurecontainerapps.io';
+    let allRestaurants = [];
+    let cart = [];
+    let selectedResId = null;
 
-    async function loadContent() {
-        const list = document.getElementById('restaurant-list');
+    async function fetchRestaurants() {
         try {
             const res = await fetch(`${BASE_URL}/restaurants`);
-            if (!res.ok) throw new Error('Server busy');
-            const data = await res.json();
-            
-            list.innerHTML = data.map(r => `
-                <div class="card" onclick="addToCart('${r.name}', 299)">
-                    <img src="https://loremflickr.com/400/250/biryani,food/all?lock=${r.id}">
-                    <div class="card-body">
-                        <h3>${r.name}</h3>
-                        <p style="color: #48c479; font-weight: 800;">★ ${r.rating}</p>
-                        <p style="color: gray;">${r.tags.join(', ')}</p>
-                    </div>
-                </div>
-            `).join('');
-        } catch (error) {
-            list.innerHTML = "<h3>Server is warming up... Please refresh in 10 seconds.</h3>";
+            allRestaurants = await res.json();
+            renderRestaurants();
+        } catch (e) {
+            document.getElementById('restaurant-grid').innerHTML = "Server Busy. Refreshing...";
         }
     }
 
-    function addToCart(name, price) {
-        cart.push({name, price});
-        const cartDiv = document.getElementById('cart-items');
-        cartDiv.innerHTML = cart.map(i => `<p>${i.name} - ₹${i.price}</p>`).join('');
+    function renderRestaurants() {
+        const grid = document.getElementById('restaurant-grid');
+        grid.innerHTML = allRestaurants.map(r => `
+            <div class="card" onclick="showMenu(${r.id})">
+                <img src="https://loremflickr.com/400/250/food,biryani/all?lock=${r.id}">
+                <div class="card-info">
+                    <h3>${r.name}</h3>
+                    <p>★ ${r.rating} • ${r.location}</p>
+                    <p style="color: gray; font-size: 14px;">${r.tags.join(', ')}</p>
+                </div>
+            </div>
+        `).join('');
     }
 
-    async function placeOrder() {
-        if(cart.length === 0) return alert("Select food first!");
+    function showMenu(resId) {
+        selectedResId = resId;
+        const res = allRestaurants.find(r => r.id === resId);
+        const view = document.getElementById('main-view');
         
-        try {
-            const response = await fetch(`${BASE_URL}/orders`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ items: cart, payment: "COD", user: "User_Warangal" })
-            });
-
-            if(response.ok) {
-                alert("Order Placed Successfully!");
-                cart = [];
-                setTimeout(() => { document.getElementById('review-modal').style.display = 'block'; }, 4000);
-            }
-        } catch (e) { alert("Checkout failed. Check connection."); }
+        view.innerHTML = `
+            <div class="back-btn" onclick="renderRestaurants()">← Back to Restaurants</div>
+            <div class="menu-list">
+                <h2>${res.name}</h2>
+                <p>${res.location} | Zero Delivery Cost</p>
+                <hr>
+                ${res.menu.map(item => `
+                    <div class="menu-item">
+                        <div>
+                            <strong>${item.item}</strong><br>
+                            <span>₹${item.price}</span>
+                        </div>
+                        <button class="add-btn" onclick="addToCart('${item.item}', ${item.price})">ADD</button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
     }
 
-    function showOnboardingForm() { document.getElementById('onboarding-modal').style.display = 'block'; }
+    function addToCart(name, price) {
+        cart.push({ name, price });
+        updateCartUI();
+    }
 
-    async function submitRegistration() {
-        const payload = {
-            name: document.getElementById('reg-name').value,
-            location: document.getElementById('reg-loc').value,
-            tags: ["New Partner"]
+    function updateCartUI() {
+        const content = document.getElementById('cart-content');
+        const totalDiv = document.getElementById('cart-total');
+        if (cart.length === 0) {
+            content.innerHTML = "Your cart is empty.";
+            totalDiv.innerHTML = "";
+            return;
+        }
+        content.innerHTML = cart.map(i => `<div style="display:flex; justify-content:space-between;"><span>${i.name}</span><span>₹${i.price}</span></div>`).join('');
+        const total = cart.reduce((sum, i) => sum + i.price, 0);
+        totalDiv.innerHTML = `Total: ₹${total}`;
+    }
+
+    async function checkout() {
+        if (cart.length === 0) return alert("Cart is empty!");
+        
+        const orderPayload = {
+            res_id: selectedResId,
+            items: cart,
+            user: "Warangal_User_1"
         };
-        const res = await fetch(`${BASE_URL}/register-restaurant`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
-        });
-        if(res.ok) { alert("Registered!"); location.reload(); }
-    }
 
-    loadContent();
-</script>
-</body>
-</html>
+        try {
+            const res = await fetch(`${BASE_URL}/orders`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json'
