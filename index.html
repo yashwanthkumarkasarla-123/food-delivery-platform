@@ -3,87 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swiggy Warangal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Gelasio:wght@700&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Swiggy Warangal - Zero Delivery Cost</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --swiggy-orange: #fc8019;
-            --text-main: #282c3f;
-            --text-sub: #686b78;
-        }
-        body { font-family: 'Outfit', sans-serif; margin: 0; background-color: #fff; color: var(--text-main); }
+        :root { --swiggy-orange: #fc8019; --text-main: #282c3f; --text-sub: #686b78; }
+        body { font-family: 'Outfit', sans-serif; margin: 0; background-color: #f0f0f0; color: var(--text-main); }
         
         /* Navbar */
         nav { padding: 15px 10%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 15px 40px -20px rgba(40,44,63,.15); position: sticky; top: 0; background: white; z-index: 1000; }
         .logo { color: var(--swiggy-orange); font-size: 24px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
-        
-        /* Hero Section */
-        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
-        h2 { font-size: 24px; font-weight: 700; margin-bottom: 25px; }
 
+        .container { max-width: 1200px; margin: 30px auto; display: flex; gap: 20px; padding: 0 20px; }
+        
         /* Restaurant Grid */
+        .main-content { flex: 3; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 32px; }
         
         /* Card Styling */
-        .card { transition: transform 0.2s ease-in-out; cursor: pointer; border-radius: 16px; overflow: hidden; }
-        .card:hover { transform: scale(0.95); }
-        
-        .img-container { width: 100%; height: 180px; position: relative; border-radius: 16px; overflow: hidden; }
+        .card { background: white; transition: transform 0.2s; cursor: pointer; border-radius: 16px; overflow: hidden; padding-bottom: 10px; }
+        .card:hover { transform: scale(0.96); }
+        .img-container { width: 100%; height: 180px; position: relative; }
         .img-container img { width: 100%; height: 100%; object-fit: cover; }
-        .img-overlay { position: absolute; bottom: 0; left: 0; right: 0; height: 50%; background: linear-gradient(rgba(255,255,255,0), rgba(0,0,0,0.9)); display: flex; align-items: flex-end; padding: 10px; color: white; font-weight: 800; font-size: 18px; }
-
-        .info { padding: 12px 4px; }
-        .res-name { font-size: 18px; font-weight: 600; margin: 0; }
-        .res-meta { display: flex; align-items: center; gap: 5px; font-weight: 600; margin: 4px 0; }
-        .rating-badge { background: #48c479; color: white; padding: 2px 5px; border-radius: 12px; font-size: 12px; display: flex; align-items: center; gap: 3px; }
-        .res-tags { color: var(--text-sub); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .res-loc { color: var(--text-sub); font-size: 14px; }
+        
+        /* Cart Sidebar */
+        .cart-sidebar { flex: 1; background: white; padding: 20px; border-radius: 16px; height: fit-content; position: sticky; top: 100px; }
+        .cart-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
+        
+        .swiggy-btn { background: var(--swiggy-orange); color: white; border: none; padding: 12px; width: 100%; font-weight: 700; cursor: pointer; margin-top: 15px; border-radius: 8px; }
+        .rating-badge { background: #48c479; color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+        
+        /* Review Modal */
+        #review-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 16px; box-shadow: 0 0 100px rgba(0,0,0,0.5); z-index: 2000; text-align: center; }
     </style>
 </head>
 <body>
 
 <nav>
-    <div class="logo">Swiggy Warangal</div>
-    <div>Search | Sign In | Cart</div>
+    <div class="logo">Warangal Eats</div>
+    <div id="user-status">Welcome, Guest</div>
 </nav>
 
 <div class="container">
-    <h2>Restaurants with online food delivery in Warangal</h2>
-    <div class="grid" id="restaurant-list">
+    <div class="main-content">
+        <h2>Top Restaurants in Warangal</h2>
+        <div class="grid" id="restaurant-list">
+            <p>Fetching fresh food for you...</p>
         </div>
-</div>
+    </div>
 
-<script>
-    async function loadRestaurants() {
-        try {
-            // Replace with your Azure URL
-            const response = await fetch('https://restaurant-app.grayplant-35e8185c.centralus.azurecontainerapps.io/restaurants');
-            const data = await response.json();
-            const list = document.getElementById('restaurant-list');
-            
-            list.innerHTML = data.map(res => `
-                <div class="card">
-                    <div class="img-container">
-                        <img src="https://loremflickr.com/400/300/biryani,food/all?lock=${res.id}" alt="food">
-                        <div class="img-overlay">₹150 OFF ABOVE ₹299</div>
-                    </div>
-                    <div class="info">
-                        <p class="res-name">${res.name}</p>
-                        <div class="res-meta">
-                            <span class="rating-badge">★ ${res.rating}</span>
-                            <span>• 25-30 mins</span>
-                        </div>
-                        <p class="res-tags">${res.tags.join(", ")}</p>
-                        <p class="res-loc">${res.location}</p>
-                    </div>
-                </div>
-            `).join('');
-        } catch (error) {
-            console.error("Error loading restaurants:", error);
-        }
-    }
-    loadRestaurants();
-</script>
-
-</body>
-</html>
+    <div class="cart-sidebar" id="cart">
+        <h3>Your Cart</h3>
+        <div id="cart-items">
+            <p style="color: gray;">Your cart is empty.</p>
+        </div>
+        <hr>
+        <div class="payment-methods">
+            <p><strong>Payment Method:</strong></p>
+            <label><input type="radio" name="payment" value="COD" checked> Cash on Delivery (COD)</label>
