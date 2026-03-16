@@ -3,179 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warangal Eats | Food Delivery</title>
+    <title>Warangal Eats | Customer App</title>
     <style>
-        :root { --swiggy-orange: #fc8019; --dark-text: #282c3f; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; color: var(--dark-text); background: #f4f4f4; }
+        :root { --swiggy-orange: #fc8019; --dark-bg: #282c3f; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #e9ecef; }
         
         /* Navbar */
-        nav { background: white; padding: 15px 10%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); sticky; top: 0; z-index: 100; }
+        nav { background: white; padding: 15px 8%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
         .logo { font-size: 24px; font-weight: bold; color: var(--swiggy-orange); text-decoration: none; }
         
-        /* Search Section */
-        .search-container { background: white; padding: 20px 10%; text-align: center; }
-        #searchBar { width: 60%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+        /* Hero/Search */
+        .hero { background: white; padding: 30px 8%; text-align: center; border-bottom: 1px solid #ddd; }
+        #searchBar { width: 50%; padding: 12px 20px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; outline: none; }
 
         /* Restaurant Grid */
-        .container { padding: 20px 10%; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
-        .card { background: white; padding: 15px; border-radius: 12px; transition: 0.3s; cursor: pointer; border: 1px solid transparent; }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-color: #eee; }
-        .card img { width: 100%; height: 160px; object-fit: cover; border-radius: 8px; }
+        .container { padding: 30px 8%; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
+        .card { background: white; padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .card img { width: 100%; height: 180px; object-fit: cover; border-radius: 6px; }
 
-        /* Tracking UI */
-        #tracking-section { 
-            position: fixed; bottom: 20px; right: 20px; width: 320px; 
-            background: white; padding: 20px; border-radius: 15px; 
-            box-shadow: 0 5px 30px rgba(0,0,0,0.2); display: none; border-top: 5px solid var(--swiggy-orange);
-        }
-        .progress-container { background: #eee; height: 10px; border-radius: 5px; margin: 15px 0; overflow: hidden; }
-        #progress-bar { background: var(--swiggy-orange); width: 10%; height: 100%; transition: 1s; }
+        /* Menu View Styles */
+        .menu-container { grid-column: 1 / -1; background: white; padding: 30px; border-radius: 12px; animation: fadeIn 0.4s; }
+        .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
+        
+        /* Buttons */
+        .cart-btn { background: var(--swiggy-orange); color: white; border: none; padding: 8px 18px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .back-btn { background: #333; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-bottom: 20px; }
 
-        /* Cart */
-        .cart-btn { background: var(--swiggy-orange); color: white; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        /* Live Tracking */
+        #tracking-modal { position: fixed; bottom: 20px; right: 20px; width: 300px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: none; border-top: 5px solid var(--swiggy-orange); }
+        .progress-bar { height: 8px; background: #eee; border-radius: 4px; margin: 10px 0; overflow: hidden; }
+        #progress-fill { height: 100%; background: var(--swiggy-orange); width: 10%; transition: 1s; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <nav>
-    <a href="#" class="logo">Warangal Eats</a>
-    <div id="cart-info">
-        <button class="cart-btn" onclick="toggleCart()">Cart (<span id="cart-count">0</span>)</button>
-    </div>
+    <a href="index.html" class="logo">Warangal Eats</a>
+    <button class="cart-btn" onclick="showCheckout()">Cart (<span id="cart-count">0</span>)</button>
 </nav>
 
-<div class="search-container">
-    <input type="text" id="searchBar" placeholder="Search for restaurants (e.g. Kritunga, Biryani)..." onkeyup="filterRestaurants()">
+<div class="hero">
+    <input type="text" id="searchBar" placeholder="Search for 'Biryani' or 'Raiyaan'..." onkeyup="filterRestaurants()">
 </div>
 
 <div class="container" id="restaurant-list">
-    </div>
+    <p style="text-align: center; grid-column: 1/-1;">Loading local flavors of Warangal...</p>
+</div>
 
-<div id="tracking-section">
-    <h3 style="margin-top:0">Live Order Tracking</h3>
-    <p id="track-status">Connecting to kitchen...</p>
-    <div class="progress-container">
-        <div id="progress-bar"></div>
-    </div>
-    <small id="rider-info"></small>
+<div id="tracking-modal">
+    <h4 style="margin:0">Live Order Status</h4>
+    <p id="status-text" style="font-size: 14px; color: #666;">Waiting for restaurant...</p>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+    <small id="rider-tag"></small>
 </div>
 
 <script>
     const API_BASE = 'https://restaurant-app.grayplant-35e8185c.centralus.azurecontainerapps.io';
-    let cart = [];
     let allRestaurants = [];
+    let cart = [];
+    let currentResId = null;
     let activeOrderId = null;
 
-    // 1. Fetch Restaurants
+    // 1. Fetch data from Azure
     async function loadRestaurants() {
         try {
             const res = await fetch(`${API_BASE}/restaurants`);
             allRestaurants = await res.json();
             displayRestaurants(allRestaurants);
         } catch (e) {
-            console.error("API Offline");
-            document.getElementById('restaurant-list').innerHTML = "<p>Server waking up... please refresh in 10 seconds.</p>";
+            document.getElementById('restaurant-list').innerHTML = "Backend is sleeping. Wake it up at the Azure URL!";
         }
     }
 
+    // 2. Display the Grid
     function displayRestaurants(data) {
         const list = document.getElementById('restaurant-list');
         list.innerHTML = data.map(res => `
-            <div class="card" onclick="addToCart('${res.name}', 280)">
-                <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400" alt="food">
+            <div class="card" onclick="viewMenu(${res.id})">
+                <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400" alt="food">
                 <h3>${res.name}</h3>
-                <p>${res.tags.join(', ')}</p>
-                <p>⭐ ${res.rating} • ${res.location}</p>
+                <p style="color:#666; font-size:14px;">${res.tags.join(', ')}</p>
+                <div style="display:flex; justify-content:space-between; margin-top:10px;">
+                    <span>⭐ ${res.rating}</span>
+                    <span>${res.location}</span>
+                </div>
             </div>
         `).join('');
     }
 
-    // 2. Search Logic
-    function filterRestaurants() {
-        const term = document.getElementById('searchBar').value.toLowerCase();
-        const filtered = allRestaurants.filter(r => 
-            r.name.toLowerCase().includes(term) || 
-            r.tags.some(t => t.toLowerCase().includes(term))
-        );
-        displayRestaurants(filtered);
+    // 3. View Menu Logic (Problem 1 Fix)
+    function viewMenu(id) {
+        currentResId = id;
+        const res = allRestaurants.find(r => r.id === id);
+        
+        let menuHtml = res.menu.map(item => `
+            <div class="menu-item">
+                <div>
+                    <strong>${item.item}</strong><br>
+                    <small>₹${item.price}</small>
+                </div>
+                <button class="cart-btn" onclick="addToCart('${item.item}', ${item.price}, ${res.id})">ADD</button>
+            </div>
+        `).join('');
+
+        document.getElementById('restaurant-list').innerHTML = `
+            <div class="menu-container">
+                <button class="back-btn" onclick="loadRestaurants()">⬅ Back to Restaurants</button>
+                <div style="display:flex; gap:20px; align-items:center; margin-bottom:20px;">
+                    <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=100" style="border-radius:50%">
+                    <div>
+                        <h2 style="margin:0">${res.name}</h2>
+                        <p>${res.location} | Delivering to your doorstep</p>
+                    </div>
+                </div>
+                <hr>
+                ${menuHtml}
+            </div>
+        `;
     }
 
-    // 3. Simple Cart Logic
-    function addToCart(name, price) {
-        cart.push({name, price});
+    // 4. Cart Logic
+    function addToCart(name, price, resId) {
+        cart.push({ name, price, resId });
         document.getElementById('cart-count').innerText = cart.length;
-        alert(`${name} added! Click Cart to Checkout.`);
     }
 
-    function toggleCart() {
-        if(cart.length === 0) return alert("Cart is empty!");
-        if(confirm(`Ready to place order for ₹${cart.length * 280}?`)) {
-            placeOrder();
+    async function showCheckout() {
+        if (cart.length === 0) return alert("Your cart is empty!");
+        const total = cart.reduce((sum, item) => sum + item.price, 0);
+        
+        if (confirm(`Place order for ₹${total}?`)) {
+            placeOrder(total);
         }
     }
 
-    // 4. FIXED Checkout Function
-    async function placeOrder() {
-        const totalAmount = cart.length * 280;
-        
+    // 5. Checkout (Problem 2 Fix: Sending res_id)
+    async function placeOrder(total) {
         try {
             const res = await fetch(`${API_BASE}/orders`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ 
-                    items: cart, 
-                    total: totalAmount,
-                    res_id: 1, 
-                    user: "Warangal_User_Test" 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    items: cart,
+                    total: total,
+                    res_id: currentResId // Now accurately links to the restaurant
                 })
             });
-            
-            if (!res.ok) throw new Error("Order failed at server");
-            
-            const data = await res.json();
-            activeOrderId = data.order_id;
-            
-            document.getElementById('tracking-section').style.display = 'block';
-            alert("Order Placed Successfully!");
+            const orderData = await res.json();
+            activeOrderId = orderData.order_id;
+
+            alert("Order placed! Tracking started.");
+            document.getElementById('tracking-modal').style.display = 'block';
             cart = [];
             document.getElementById('cart-count').innerText = "0";
-            startLiveTracking();
+            startTracking();
         } catch (e) {
-            alert("Checkout failed. Is the Azure server awake?");
-            console.error(e);
-        }
-    }
-
-    // 5. Live Tracking Logic
-    function startLiveTracking() {
-        const timer = setInterval(async () => {
-            if(!activeOrderId) return clearInterval(timer);
-
-            try {
-                const res = await fetch(`${API_BASE}/order-status/${activeOrderId}`);
-                const data = await res.json();
-                
-                const statusEl = document.getElementById('track-status');
-                const progressEl = document.getElementById('progress-bar');
-                
-                statusEl.innerText = data.status;
-
-                if(data.status === 'PREPARING') {
-                    progressEl.style.width = '40%';
-                } else if(data.status === 'OUT_FOR_DELIVERY') {
-                    progressEl.style.width = '80%';
-                    document.getElementById('rider-info').innerText = "🛵 Rider Rajesh is on the way!";
-                } else if(data.status === 'DELIVERED') {
-                    progressEl.style.width = '100%';
-                    statusEl.innerText = "✅ Enjoy your meal!";
-                    clearInterval(timer);
-                }
-            } catch (e) { console.log("Tracking update failed..."); }
-        }, 5000);
-    }
-
-    window.onload = loadRestaurants;
-</script>
-
-</body>
-</html>
