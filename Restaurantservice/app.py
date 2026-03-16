@@ -1,7 +1,10 @@
-
 from flask import Flask, jsonify
+from flask_cors import CORS # 1. Import CORS
 
 app = Flask(__name__)
+CORS(app) # 2. Enable CORS for all routes
+
+
 
 restaurants = [
     {"id": 1, "name": "Papadams Blue", "location": "Hanamkonda", "rating": 4.4, "tags": ["Biryani", "South Indian"]},
