@@ -35,4 +35,112 @@
 <body>
 
 <nav>
-    <div class="logo">WARANGAL
+    <div class="logo">WARANGAL EATS</div>
+    <div class="nav-links">
+        <span onclick="showOnboardingForm()" style="color: var(--swiggy-orange);">Partner with Us</span>
+        <span onclick="showRestaurantPanel()">Admin Login</span>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="main">
+        <h2 id="view-title">Top Rated in Warangal</h2>
+        <div id="restaurant-list" class="grid">
+            <p>Fetching fresh data from Azure servers...</p>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <h3>Your Cart</h3>
+        <div id="cart-items"><p style="color: gray;">Add a delicious meal!</p></div>
+        <hr>
+        <p><strong>Payment:</strong> Cash on Delivery</p>
+        <button class="btn-order" onclick="placeOrder()">PLACE ORDER</button>
+    </div>
+</div>
+
+<div id="onboarding-modal" style="display:none; position:fixed; top:50%; left:50%; transform: translate(-50%, -50%); background:white; padding:30px; border-radius:15px; box-shadow: 0 0 20px rgba(0,0,0,0.2); z-index:3000;">
+    <h3>Register Restaurant</h3>
+    <input type="text" id="reg-name" placeholder="Name" style="width:100%; margin:10px 0;"><br>
+    <input type="text" id="reg-loc" placeholder="Location" style="width:100%; margin:10px 0;"><br>
+    <button onclick="submitRegistration()" class="btn-order">Submit</button>
+    <button onclick="document.getElementById('onboarding-modal').style.display='none'" style="border:none; background:none; cursor:pointer; width:100%; margin-top:10px;">Close</button>
+</div>
+
+<div id="review-modal">
+    <h2>Enjoy your meal! 🍛</h2>
+    <p>Please rate your Warangal Eats experience.</p>
+    <div style="font-size: 30px; margin: 20px;">⭐⭐⭐⭐⭐</div>
+    <button class="btn-order" onclick="location.reload()">Back to Home</button>
+</div>
+
+<script>
+    let cart = [];
+    const BASE_URL = 'https://restaurant-app.grayplant-35e8185c.centralus.azurecontainerapps.io';
+
+    async function loadContent() {
+        const list = document.getElementById('restaurant-list');
+        try {
+            const res = await fetch(`${BASE_URL}/restaurants`);
+            if (!res.ok) throw new Error('Server busy');
+            const data = await res.json();
+            
+            list.innerHTML = data.map(r => `
+                <div class="card" onclick="addToCart('${r.name}', 299)">
+                    <img src="https://loremflickr.com/400/250/biryani,food/all?lock=${r.id}">
+                    <div class="card-body">
+                        <h3>${r.name}</h3>
+                        <p style="color: #48c479; font-weight: 800;">★ ${r.rating}</p>
+                        <p style="color: gray;">${r.tags.join(', ')}</p>
+                    </div>
+                </div>
+            `).join('');
+        } catch (error) {
+            list.innerHTML = "<h3>Server is warming up... Please refresh in 10 seconds.</h3>";
+        }
+    }
+
+    function addToCart(name, price) {
+        cart.push({name, price});
+        const cartDiv = document.getElementById('cart-items');
+        cartDiv.innerHTML = cart.map(i => `<p>${i.name} - ₹${i.price}</p>`).join('');
+    }
+
+    async function placeOrder() {
+        if(cart.length === 0) return alert("Select food first!");
+        
+        try {
+            const response = await fetch(`${BASE_URL}/orders`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items: cart, payment: "COD", user: "User_Warangal" })
+            });
+
+            if(response.ok) {
+                alert("Order Placed Successfully!");
+                cart = [];
+                setTimeout(() => { document.getElementById('review-modal').style.display = 'block'; }, 4000);
+            }
+        } catch (e) { alert("Checkout failed. Check connection."); }
+    }
+
+    function showOnboardingForm() { document.getElementById('onboarding-modal').style.display = 'block'; }
+
+    async function submitRegistration() {
+        const payload = {
+            name: document.getElementById('reg-name').value,
+            location: document.getElementById('reg-loc').value,
+            tags: ["New Partner"]
+        };
+        const res = await fetch(`${BASE_URL}/register-restaurant`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        if(res.ok) { alert("Registered!"); location.reload(); }
+    }
+
+    loadContent();
+</script>
+</body>
+</html>
