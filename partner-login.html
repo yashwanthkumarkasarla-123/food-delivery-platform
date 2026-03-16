@@ -12,7 +12,7 @@
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background-color: #f4f7f6;
             margin: 0;
             display: flex;
@@ -36,14 +36,12 @@
             font-weight: 800;
             color: var(--partner-green);
             margin-bottom: 5px;
-            letter-spacing: -1px;
         }
 
         .subtitle {
             color: #666;
             font-size: 14px;
             margin-bottom: 30px;
-            text-transform: uppercase;
             letter-spacing: 1px;
         }
 
@@ -57,7 +55,6 @@
             font-size: 12px;
             font-weight: bold;
             margin-bottom: 5px;
-            color: #333;
         }
 
         input {
@@ -67,12 +64,6 @@
             border-radius: 6px;
             box-sizing: border-box;
             font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--swiggy-orange);
         }
 
         button {
@@ -85,15 +76,9 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.1s, background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #002a1d;
-        }
-
-        button:active {
-            transform: scale(0.98);
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .error-box {
@@ -107,22 +92,14 @@
             border: 1px solid #f5c6cb;
         }
 
-        .footer-text {
-            margin-top: 25px;
-            font-size: 12px;
-            color: #999;
-        }
-
-        /* Loading Spinner */
         .spinner {
             display: none;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border: 3px solid rgba(255,255,255,.3);
             border-radius: 50%;
             border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-            margin: 0 auto;
+            animation: spin 1s linear infinite;
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -132,11 +109,9 @@
 
 <div class="login-container">
     <div class="brand">Warangal Eats</div>
-    <div class="subtitle">Partner Dashboard</div>
+    <div class="subtitle">PARTNER PORTAL</div>
 
-    <div id="error-message" class="error-box">
-        Invalid Restaurant ID or Password.
-    </div>
+    <div id="error-message" class="error-box"></div>
 
     <div class="form-group">
         <label>RESTAURANT ID</label>
@@ -149,14 +124,13 @@
     </div>
 
     <button id="login-btn" onclick="attemptLogin()">
-        <span id="btn-text">LOGIN</span>
+        <span id="btn-text">LOGIN TO DASHBOARD</span>
         <div id="btn-spinner" class="spinner"></div>
     </button>
 
-    <div class="footer-text">
-        © 2026 Warangal Eats Merchant Services. <br>
-        Trouble logging in? Contact support.
-    </div>
+    <p style="margin-top: 20px; font-size: 11px; color: #999;">
+        Credentials Hint: Use <b>KRITUNGA01</b> or <b>RAIYAAN01</b> with <b>warangal123</b>
+    </p>
 </div>
 
 <script>
@@ -167,49 +141,49 @@
         const btnText = document.getElementById('btn-text');
         const btnSpinner = document.getElementById('btn-spinner');
 
-        // Reset UI
         errorBox.style.display = 'none';
         
-        // Validation
         if (!idInput.value || !passInput.value) {
             errorBox.innerText = "Please fill in all fields.";
             errorBox.style.display = 'block';
             return;
         }
 
-        // Show loading state
         btnText.style.display = 'none';
         btnSpinner.style.display = 'block';
 
-        // Simulate API call delay
+        // Simulated Database Check
         setTimeout(() => {
-            // Mock Credentials (You can change these)
-            const validID = "KRITUNGA01";
-            const validPass = "warangal123";
+            const partnerAccounts = {
+                "RAIYAAN01": { id: 1, pass: "warangal123", name: "Raiyaan's Hotel" },
+                "MANDI01":   { id: 2, pass: "warangal123", name: "Mandi.com" },
+                "KRITUNGA01": { id: 3, pass: "warangal123", name: "Kritunga Restaurant" },
+                "SUPRABHA01": { id: 4, pass: "warangal123", name: "Suprabha Hotel" }
+            };
 
-            if (idInput.value.toUpperCase() === validID && passInput.value === validPass) {
-                // SUCCESS: Set session storage
+            const user = idInput.value.toUpperCase();
+            const pass = passInput.value;
+
+            if (partnerAccounts[user] && partnerAccounts[user].pass === pass) {
+                // Success: Store specific restaurant details
                 localStorage.setItem('isPartnerLoggedIn', 'true');
-                localStorage.setItem('activeRestaurant', 'Kritunga Restaurant');
+                localStorage.setItem('res_id', partnerAccounts[user].id);
+                localStorage.setItem('activeRestaurant', partnerAccounts[user].name);
                 
-                // Redirect to the dashboard
-                window.location.href = 'partner.html';
+                // Redirect with the ID in the URL for the dashboard to use
+                window.location.href = `partner.html?res_id=${partnerAccounts[user].id}`;
             } else {
-                // FAILURE
+                // Failure
                 btnText.style.display = 'block';
                 btnSpinner.style.display = 'none';
-                errorBox.innerText = "Invalid credentials. Hint: KRITUNGA01 / warangal123";
+                errorBox.innerText = "Invalid credentials. Access Denied.";
                 errorBox.style.display = 'block';
             }
         }, 1200);
     }
 
-    // Allow "Enter" key to login
-    document.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            attemptLogin();
-        }
-    });
+    // Support for Enter key
+    document.addEventListener('keypress', (e) => { if(e.key === 'Enter') attemptLogin(); });
 </script>
 
 </body>
