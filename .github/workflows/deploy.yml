@@ -9,24 +9,23 @@ jobs:
 build-and-deploy:
 runs-on: ubuntu-latest
 
-
+```
 steps:
-  - name: Checkout code
-    uses: actions/checkout@v4
+  - uses: actions/checkout@v4
 
-  - name: Login to Azure
+  - name: Azure Login
     uses: azure/login@v1
     with:
       creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-  - name: Build and Push Image to ACR
+  - name: Build and Push Image
     run: |
       az acr build \
         --registry fooddeliveryacr123 \
         --image restaurant-service:v1 \
         .
 
-  - name: Deploy to Container Apps
+  - name: Deploy Container App
     run: |
       az containerapp create \
         --name restaurant-app \
@@ -34,5 +33,5 @@ steps:
         --environment food-env \
         --image fooddeliveryacr123.azurecr.io/restaurant-service:v1 \
         --target-port 5000 \
-        --ingress externa
-
+        --ingress external
+```
