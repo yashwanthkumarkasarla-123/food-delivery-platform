@@ -7,10 +7,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { --swiggy-orange: #fc8019; --text-main: #282c3f; --bg: #f7f7f7; }
-        body { font-family: 'Outfit', sans-serif; margin: 0; background-color: var(--bg); }
+        body { font-family: 'Outfit', sans-serif; margin: 0; background-color: var(--bg); color: var(--text-main); }
         nav { padding: 15px 10%; display: flex; justify-content: space-between; align-items: center; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
-        .search-container { padding: 20px 10%; background: white; text-align: center; }
-        #searchBar { width: 60%; padding: 12px 20px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
+        .logo { color: var(--swiggy-orange); font-size: 26px; font-weight: 800; cursor: pointer; text-decoration: none; }
+        .search-bar-container { padding: 20px 10%; background: white; display: flex; justify-content: center; }
+        #search-input { width: 100%; max-width: 600px; padding: 12px 20px; border: 1px solid #dcdcdc; border-radius: 8px; font-size: 16px; outline: none; }
         .container { max-width: 1200px; margin: 20px auto; display: grid; grid-template-columns: 3fr 1fr; gap: 30px; padding: 0 20px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
         .card { background: white; border-radius: 16px; overflow: hidden; cursor: pointer; border: 1px solid #eee; transition: 0.3s; }
@@ -19,97 +20,111 @@
         .card-info { padding: 15px; }
         .sidebar { background: white; padding: 20px; border-radius: 16px; height: fit-content; position: sticky; top: 100px; }
         .btn-checkout { background: var(--swiggy-orange); color: white; border: none; padding: 15px; width: 100%; font-weight: 700; border-radius: 8px; cursor: pointer; margin-top: 20px; }
-        .tracking-box { display: none; margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3; }
-        .back-btn { display: inline-block; margin-bottom: 20px; padding: 8px 15px; background: #eee; border-radius: 5px; cursor: pointer; font-weight: 600; }
+        .back-btn { margin-bottom: 20px; cursor: pointer; color: var(--swiggy-orange); font-weight: 600; display: inline-block; padding: 10px 0; }
+        .track-box { margin-top: 20px; padding: 15px; background: #fff4ec; border: 1px solid #fc8019; border-radius: 8px; display: none; }
+        .status-dot { height: 10px; width: 10px; background-color: #fc8019; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <nav>
-    <div style="font-size: 24px; font-weight: 800; color: var(--swiggy-orange); cursor:pointer;" onclick="goHome()">WARANGAL EATS</div>
-    <div><a href="admin.html" style="text-decoration:none; color:inherit;">Partner Login</a></div>
+    <div class="logo" onclick="goHome()">WARANGAL EATS</div>
+    <div><a href="admin.html" style="text-decoration:none; color:#686b78; font-weight:600;">Restaurant App</a></div>
 </nav>
 
-<div class="search-container" id="search-area">
-    <input type="text" id="searchBar" placeholder="Search for restaurants or food..." onkeyup="filterRestaurants()">
+<div class="search-bar-container" id="search-section">
+    <input type="text" id="search-input" placeholder="Search for restaurants, cuisines or dishes..." onkeyup="handleSearch()">
 </div>
 
 <div class="container">
-    <div id="main-content">
-        <div id="restaurant-grid" class="grid"></div>
+    <div id="main-view">
+        <h2 id="view-title">Top Restaurants in Warangal</h2>
+        <div id="content-grid" class="grid">
+            </div>
     </div>
 
     <div class="sidebar">
-        <h3>Cart</h3>
-        <div id="cart-content">Empty cart</div>
-        <div id="cart-total" style="font-weight: 800; margin-top: 10px;"></div>
-        <button class="btn-checkout" onclick="checkout()">CHECKOUT</button>
-        
-        <div id="tracking-ui" class="tracking-box">
-            <h4>Live Order Status</h4>
-            <p id="status-text">Waiting for order...</p>
-            <div id="rider-info" style="font-size: 14px; color: #555;"></div>
+        <h3>Your Cart</h3>
+        <div id="cart-items">Your cart is empty.</div>
+        <hr>
+        <div id="cart-total" style="font-weight:800; font-size:18px;"></div>
+        <button class="btn-checkout" onclick="placeOrder()">PROCEED TO CHECKOUT</button>
+
+        <div id="live-tracker" class="track-box">
+            <h4><span class="status-dot"></span> Live Tracking</h4>
+            <p id="order-status-label" style="font-weight:600; color:#fc8019;">Waiting for Confirmation...</p>
+            <p id="rider-msg" style="font-size:14px; color:#686b78;"></p>
         </div>
     </div>
 </div>
 
 <script>
-    const BASE_URL = 'https://restaurant-app.grayplant-35e8185c.centralus.azurecontainerapps.io';
+    const API_BASE = 'https://restaurant-app.grayplant-35e8185c.centralus.azurecontainerapps.io';
     let allRestaurants = [];
     let cart = [];
-    let currentOrderId = null;
+    let activeOrderId = null;
 
     // Load Data
-    async function init() {
+    async function loadApp() {
         try {
-            const res = await fetch(`${BASE_URL}/restaurants`);
+            const res = await fetch(`${API_BASE}/restaurants`);
             allRestaurants = await res.json();
             renderRestaurants(allRestaurants);
-        } catch (e) { console.error("API Offline"); }
+        } catch (e) {
+            document.getElementById('content-grid').innerHTML = "Server is waking up. Please wait 10s...";
+        }
     }
 
     // Task 2: Search Logic
-    function filterRestaurants() {
-        const term = document.getElementById('searchBar').value.toLowerCase();
+    function handleSearch() {
+        const query = document.getElementById('search-input').value.toLowerCase();
         const filtered = allRestaurants.filter(r => 
-            r.name.toLowerCase().includes(term) || 
-            r.tags.some(t => t.toLowerCase().includes(term))
+            r.name.toLowerCase().includes(query) || 
+            r.tags.some(tag => tag.toLowerCase().includes(query))
         );
         renderRestaurants(filtered);
     }
 
     function renderRestaurants(data) {
-        document.getElementById('search-area').style.display = 'block';
-        const grid = document.getElementById('restaurant-grid');
+        document.getElementById('view-title').innerText = "Top Restaurants in Warangal";
+        document.getElementById('search-section').style.display = "flex";
+        const grid = document.getElementById('content-grid');
         grid.innerHTML = data.map(r => `
-            <div class="card" onclick="showMenu(${r.id})">
+            <div class="card" onclick="openMenu(${r.id})">
                 <img src="https://loremflickr.com/400/250/food?lock=${r.id}">
                 <div class="card-info">
                     <h3>${r.name}</h3>
-                    <p>${r.tags.join(', ')}</p>
-                    <p>★ ${r.rating} • 30 mins</p>
+                    <p style="color:#686b78; font-size:14px;">${r.tags.join(', ')}</p>
+                    <p>★ ${r.rating} • 35 MINS</p>
                 </div>
             </div>
         `).join('');
     }
 
-    // Task 1: Fix Back Button
+    // Task 1: Back Button Logic
     function goHome() {
         renderRestaurants(allRestaurants);
+        document.getElementById('search-input').value = "";
     }
 
-    function showMenu(resId) {
+    function openMenu(resId) {
         const res = allRestaurants.find(r => r.id === resId);
-        document.getElementById('search-area').style.display = 'none'; // Hide search in menu view
-        const content = document.getElementById('main-content');
-        content.innerHTML = `
+        document.getElementById('search-section').style.display = "none";
+        document.getElementById('view-title').innerText = res.name;
+        
+        const grid = document.getElementById('content-grid');
+        grid.innerHTML = `
             <div class="back-btn" onclick="goHome()">← Back to Restaurants</div>
-            <div style="background:white; padding:30px; border-radius:16px;">
-                <h2>${res.name}</h2>
+            <div style="background:white; padding:20px; border-radius:16px;">
+                <h3>Menu Items</h3>
                 ${res.menu.map(m => `
                     <div style="display:flex; justify-content:space-between; padding:15px 0; border-bottom:1px solid #eee;">
-                        <div><strong>${m.item}</strong><br>₹${m.price}</div>
-                        <button onclick="addToCart('${m.item}', ${m.price})" style="color:green; font-weight:700; cursor:pointer;">ADD</button>
+                        <div>
+                            <div style="font-weight:600;">${m.item}</div>
+                            <div style="font-size:14px;">₹${m.price}</div>
+                        </div>
+                        <button onclick="addToCart('${m.item}', ${m.price})" style="color:#60b246; border:1px solid #bebfc5; background:white; padding:5px 20px; font-weight:700; cursor:pointer;">ADD</button>
                     </div>
                 `).join('')}
             </div>
@@ -117,32 +132,65 @@
     }
 
     function addToCart(name, price) {
-        cart.push({name, price});
-        updateCart();
+        cart.push({ name, price });
+        updateCartUI();
     }
 
-    function updateCart() {
-        const div = document.getElementById('cart-content');
-        div.innerHTML = cart.map(i => `<div>${i.name} - ₹${i.price}</div>`).join('');
-        const total = cart.reduce((s, i) => s + i.price, 0);
+    function updateCartUI() {
+        const list = document.getElementById('cart-items');
+        if(cart.length === 0) {
+            list.innerHTML = "Your cart is empty.";
+            return;
+        }
+        list.innerHTML = cart.map(i => `<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>${i.name}</span><span>₹${i.price}</span></div>`).join('');
+        const total = cart.reduce((sum, item) => sum + item.price, 0);
         document.getElementById('cart-total').innerText = `Total: ₹${total}`;
     }
 
-    // Task 3: Live Tracking Initiation
-    async function checkout() {
-        if(!cart.length) return alert("Cart empty");
-        const res = await fetch(`${BASE_URL}/orders`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ items: cart, res_id: 1 })
-        });
-        const order = await res.json();
-        currentOrderId = order.order_id;
-        alert("Order Placed!");
-        startTracking();
+    // Task 3: Live Order Tracking
+    async function placeOrder() {
+        if(cart.length === 0) return alert("Add items first!");
+        
+        try {
+            const res = await fetch(`${API_BASE}/orders`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ items: cart, res_id: 1, user: "Warangal_User" })
+            });
+            const data = await res.json();
+            activeOrderId = data.order_id;
+            
+            alert("Order Sent! Wait for Restaurant acceptance.");
+            cart = [];
+            updateCartUI();
+            startLiveTracking();
+        } catch (e) { alert("Checkout failed. Try again."); }
     }
 
-    function startTracking() {
-        document.getElementById('tracking-ui').style.display = 'block';
-        const tracker = setInterval(async () => {
-            const res = await fetch(`${BASE_URL}/order-status/${
+    function startLiveTracking() {
+        const tracker = document.getElementById('live-tracker');
+        tracker.style.display = "block";
+        
+        const poll = setInterval(async () => {
+            try {
+                const res = await fetch(`${API_BASE}/order-status/${activeOrderId}`);
+                const data = await res.json();
+                
+                document.getElementById('order-status-label').innerText = data.status.replace(/_/g, ' ');
+                
+                if(data.assigned_rider) {
+                    document.getElementById('rider-msg').innerText = `Rider ${data.assigned_rider} is picking up your order!`;
+                }
+
+                if(data.status === 'DELIVERED' || data.status === 'REJECTED') {
+                    clearInterval(poll);
+                    if(data.status === 'REJECTED') tracker.style.background = "#ffebee";
+                }
+            } catch (e) { console.error("Tracking lost connection..."); }
+        }, 3000); // Polling every 3 seconds
+    }
+
+    loadApp();
+</script>
+</body>
+</html>
