@@ -7,43 +7,49 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { --swiggy-orange: #fc8019; --text-main: #282c3f; --bg: #f7f7f7; }
-        body { font-family: 'Outfit', sans-serif; margin: 0; background-color: var(--bg); color: var(--text-main); }
+        body { font-family: 'Outfit', sans-serif; margin: 0; background-color: var(--bg); }
         nav { padding: 15px 10%; display: flex; justify-content: space-between; align-items: center; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
-        .logo { color: var(--swiggy-orange); font-size: 26px; font-weight: 800; cursor: pointer; }
-        .container { max-width: 1200px; margin: 40px auto; display: grid; grid-template-columns: 3fr 1fr; gap: 30px; padding: 0 20px; }
+        .search-container { padding: 20px 10%; background: white; text-align: center; }
+        #searchBar { width: 60%; padding: 12px 20px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
+        .container { max-width: 1200px; margin: 20px auto; display: grid; grid-template-columns: 3fr 1fr; gap: 30px; padding: 0 20px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
         .card { background: white; border-radius: 16px; overflow: hidden; cursor: pointer; border: 1px solid #eee; transition: 0.3s; }
-        .card:hover { transform: scale(0.98); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
         .card img { width: 100%; height: 160px; object-fit: cover; }
         .card-info { padding: 15px; }
-        .menu-list { background: white; padding: 20px; border-radius: 16px; }
-        .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
-        .add-btn { color: #60b246; border: 1px solid #bebfc5; background: white; padding: 8px 25px; font-weight: 700; cursor: pointer; border-radius: 4px; }
         .sidebar { background: white; padding: 20px; border-radius: 16px; height: fit-content; position: sticky; top: 100px; }
         .btn-checkout { background: var(--swiggy-orange); color: white; border: none; padding: 15px; width: 100%; font-weight: 700; border-radius: 8px; cursor: pointer; margin-top: 20px; }
-        .back-btn { margin-bottom: 20px; cursor: pointer; color: var(--swiggy-orange); font-weight: 600; }
+        .tracking-box { display: none; margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3; }
+        .back-btn { display: inline-block; margin-bottom: 20px; padding: 8px 15px; background: #eee; border-radius: 5px; cursor: pointer; font-weight: 600; }
     </style>
 </head>
 <body>
 
 <nav>
-    <div class="logo" onclick="location.reload()">WARANGAL EATS</div>
-    <div>Search | Help | Sign In</div>
+    <div style="font-size: 24px; font-weight: 800; color: var(--swiggy-orange); cursor:pointer;" onclick="goHome()">WARANGAL EATS</div>
+    <div><a href="admin.html" style="text-decoration:none; color:inherit;">Partner Login</a></div>
 </nav>
 
+<div class="search-container" id="search-area">
+    <input type="text" id="searchBar" placeholder="Search for restaurants or food..." onkeyup="filterRestaurants()">
+</div>
+
 <div class="container">
-    <div class="main-content" id="main-view">
-        <h2>Restaurants in Warangal</h2>
-        <div id="restaurant-grid" class="grid">
-            <p>Fetching the best menus for you...</p>
-        </div>
+    <div id="main-content">
+        <div id="restaurant-grid" class="grid"></div>
     </div>
 
     <div class="sidebar">
         <h3>Cart</h3>
-        <div id="cart-content">Your cart is empty.</div>
-        <div id="cart-total" style="margin-top: 15px; font-weight: 800;"></div>
-        <button class="btn-checkout" onclick="checkout()">CHECKOUT (COD)</button>
+        <div id="cart-content">Empty cart</div>
+        <div id="cart-total" style="font-weight: 800; margin-top: 10px;"></div>
+        <button class="btn-checkout" onclick="checkout()">CHECKOUT</button>
+        
+        <div id="tracking-ui" class="tracking-box">
+            <h4>Live Order Status</h4>
+            <p id="status-text">Waiting for order...</p>
+            <div id="rider-info" style="font-size: 14px; color: #555;"></div>
+        </div>
     </div>
 </div>
 
@@ -51,44 +57,59 @@
     const BASE_URL = 'https://restaurant-app.grayplant-35e8185c.centralus.azurecontainerapps.io';
     let allRestaurants = [];
     let cart = [];
-    let selectedResId = null;
+    let currentOrderId = null;
 
-    async function fetchRestaurants() {
+    // Load Data
+    async function init() {
         try {
             const res = await fetch(`${BASE_URL}/restaurants`);
             allRestaurants = await res.json();
-            renderRestaurants();
-        } catch (e) {
-            document.getElementById('restaurant-grid').innerHTML = "Server waking up... Please refresh.";
-        }
+            renderRestaurants(allRestaurants);
+        } catch (e) { console.error("API Offline"); }
     }
 
-    function renderRestaurants() {
+    // Task 2: Search Logic
+    function filterRestaurants() {
+        const term = document.getElementById('searchBar').value.toLowerCase();
+        const filtered = allRestaurants.filter(r => 
+            r.name.toLowerCase().includes(term) || 
+            r.tags.some(t => t.toLowerCase().includes(term))
+        );
+        renderRestaurants(filtered);
+    }
+
+    function renderRestaurants(data) {
+        document.getElementById('search-area').style.display = 'block';
         const grid = document.getElementById('restaurant-grid');
-        grid.innerHTML = allRestaurants.map(r => `
+        grid.innerHTML = data.map(r => `
             <div class="card" onclick="showMenu(${r.id})">
-                <img src="https://loremflickr.com/400/250/food,biryani/all?lock=${r.id}">
+                <img src="https://loremflickr.com/400/250/food?lock=${r.id}">
                 <div class="card-info">
                     <h3>${r.name}</h3>
-                    <p>★ ${r.rating} • ${r.location}</p>
+                    <p>${r.tags.join(', ')}</p>
+                    <p>★ ${r.rating} • 30 mins</p>
                 </div>
             </div>
         `).join('');
     }
 
+    // Task 1: Fix Back Button
+    function goHome() {
+        renderRestaurants(allRestaurants);
+    }
+
     function showMenu(resId) {
-        selectedResId = resId;
         const res = allRestaurants.find(r => r.id === resId);
-        const view = document.getElementById('main-view');
-        
-        view.innerHTML = `
-            <div class="back-btn" onclick="renderRestaurants()">← Back</div>
-            <div class="menu-list">
-                <h2>${res.name} Menu</h2>
-                ${res.menu.map(item => `
-                    <div class="menu-item">
-                        <div><strong>${item.item}</strong><br>₹${item.price}</div>
-                        <button class="add-btn" onclick="addToCart('${item.item}', ${item.price})">ADD</button>
+        document.getElementById('search-area').style.display = 'none'; // Hide search in menu view
+        const content = document.getElementById('main-content');
+        content.innerHTML = `
+            <div class="back-btn" onclick="goHome()">← Back to Restaurants</div>
+            <div style="background:white; padding:30px; border-radius:16px;">
+                <h2>${res.name}</h2>
+                ${res.menu.map(m => `
+                    <div style="display:flex; justify-content:space-between; padding:15px 0; border-bottom:1px solid #eee;">
+                        <div><strong>${m.item}</strong><br>₹${m.price}</div>
+                        <button onclick="addToCart('${m.item}', ${m.price})" style="color:green; font-weight:700; cursor:pointer;">ADD</button>
                     </div>
                 `).join('')}
             </div>
@@ -96,35 +117,32 @@
     }
 
     function addToCart(name, price) {
-        cart.push({ name, price });
-        updateCartUI();
+        cart.push({name, price});
+        updateCart();
     }
 
-    function updateCartUI() {
-        const content = document.getElementById('cart-content');
-        const totalDiv = document.getElementById('cart-total');
-        content.innerHTML = cart.map(i => `<div>${i.name} - ₹${i.price}</div>`).join('');
-        const total = cart.reduce((sum, i) => sum + i.price, 0);
-        totalDiv.innerHTML = `Total: ₹${total}`;
+    function updateCart() {
+        const div = document.getElementById('cart-content');
+        div.innerHTML = cart.map(i => `<div>${i.name} - ₹${i.price}</div>`).join('');
+        const total = cart.reduce((s, i) => s + i.price, 0);
+        document.getElementById('cart-total').innerText = `Total: ₹${total}`;
     }
 
+    // Task 3: Live Tracking Initiation
     async function checkout() {
-        if (!cart.length) return alert("Cart is empty!");
-        try {
-            const res = await fetch(`${BASE_URL}/orders`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ res_id: selectedResId, items: cart })
-            });
-            if (res.ok) {
-                alert("Order Sent! Wait for Restaurant acceptance.");
-                cart = [];
-                location.reload();
-            }
-        } catch (e) { alert("Error placing order."); }
+        if(!cart.length) return alert("Cart empty");
+        const res = await fetch(`${BASE_URL}/orders`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ items: cart, res_id: 1 })
+        });
+        const order = await res.json();
+        currentOrderId = order.order_id;
+        alert("Order Placed!");
+        startTracking();
     }
 
-    fetchRestaurants();
-</script>
-</body>
-</html>
+    function startTracking() {
+        document.getElementById('tracking-ui').style.display = 'block';
+        const tracker = setInterval(async () => {
+            const res = await fetch(`${BASE_URL}/order-status/${
