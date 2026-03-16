@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partner Login | Warangal Eats</title>
+    <style>
+        :root {
+            --partner-green: #003d29;
+            --swiggy-orange: #fc8019;
+            --error-red: #d9534f;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .brand {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--partner-green);
+            margin-bottom: 5px;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--swiggy-orange);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--partner-green);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #002a1d;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .error-box {
+            background: #ffecec;
+            color: var(--error-red);
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+            border: 1px solid #f5c6cb;
+        }
+
+        .footer-text {
+            margin-top: 25px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <div class="brand">Warangal Eats</div>
+    <div class="subtitle">Partner Dashboard</div>
+
+    <div id="error-message" class="error-box">
+        Invalid Restaurant ID or Password.
+    </div>
+
+    <div class="form-group">
+        <label>RESTAURANT ID</label>
+        <input type="text" id="res-id" placeholder="e.g. KRITUNGA01" autocomplete="off">
+    </div>
+
+    <div class="form-group">
+        <label>PASSWORD</label>
+        <input type="password" id="res-pass" placeholder="••••••••">
+    </div>
+
+    <button id="login-btn" onclick="attemptLogin()">
+        <span id="btn-text">LOGIN</span>
+        <div id="btn-spinner" class="spinner"></div>
+    </button>
+
+    <div class="footer-text">
+        © 2026 Warangal Eats Merchant Services. <br>
+        Trouble logging in? Contact support.
+    </div>
+</div>
+
+<script>
+    function attemptLogin() {
+        const idInput = document.getElementById('res-id');
+        const passInput = document.getElementById('res-pass');
+        const errorBox = document.getElementById('error-message');
+        const btnText = document.getElementById('btn-text');
+        const btnSpinner = document.getElementById('btn-spinner');
+
+        // Reset UI
+        errorBox.style.display = 'none';
+        
+        // Validation
+        if (!idInput.value || !passInput.value) {
+            errorBox.innerText = "Please fill in all fields.";
+            errorBox.style.display = 'block';
+            return;
+        }
+
+        // Show loading state
+        btnText.style.display = 'none';
+        btnSpinner.style.display = 'block';
+
+        // Simulate API call delay
+        setTimeout(() => {
+            // Mock Credentials (You can change these)
+            const validID = "KRITUNGA01";
+            const validPass = "warangal123";
+
+            if (idInput.value.toUpperCase() === validID && passInput.value === validPass) {
+                // SUCCESS: Set session storage
+                localStorage.setItem('isPartnerLoggedIn', 'true');
+                localStorage.setItem('activeRestaurant', 'Kritunga Restaurant');
+                
+                // Redirect to the dashboard
+                window.location.href = 'partner.html';
+            } else {
+                // FAILURE
+                btnText.style.display = 'block';
+                btnSpinner.style.display = 'none';
+                errorBox.innerText = "Invalid credentials. Hint: KRITUNGA01 / warangal123";
+                errorBox.style.display = 'block';
+            }
+        }, 1200);
+    }
+
+    // Allow "Enter" key to login
+    document.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            attemptLogin();
+        }
+    });
+</script>
+
+</body>
+</html>
