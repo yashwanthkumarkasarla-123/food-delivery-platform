@@ -58,7 +58,7 @@
         try {
             // Replace with your Azure URL
             const response = await fetch('https://restaurant-app.grayplant-35e8185c.centralus.azurecontainerapps.io/restaurants');
-            const data = await response.all();
+            const data = await response.json();
             const list = document.getElementById('restaurant-list');
             
             list.innerHTML = data.map(res => `
