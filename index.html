@@ -3,48 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warangal Eats | Swiggy Replica</title>
+    <title>Warangal Eats | Swiggy Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { --swiggy-orange: #fc8019; --text-main: #282c3f; --bg: #f7f7f7; }
         body { font-family: 'Outfit', sans-serif; margin: 0; background-color: var(--bg); color: var(--text-main); }
-        
         nav { padding: 15px 10%; display: flex; justify-content: space-between; align-items: center; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
-        .logo { color: var(--swiggy-orange); font-size: 26px; font-weight: 800; text-decoration: none; }
-
+        .logo { color: var(--swiggy-orange); font-size: 26px; font-weight: 800; cursor: pointer; }
         .container { max-width: 1200px; margin: 40px auto; display: grid; grid-template-columns: 3fr 1fr; gap: 30px; padding: 0 20px; }
-        
-        /* Menu & Grid */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
         .card { background: white; border-radius: 16px; overflow: hidden; cursor: pointer; border: 1px solid #eee; transition: 0.3s; }
         .card:hover { transform: scale(0.98); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         .card img { width: 100%; height: 160px; object-fit: cover; }
         .card-info { padding: 15px; }
-
         .menu-list { background: white; padding: 20px; border-radius: 16px; }
         .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
         .add-btn { color: #60b246; border: 1px solid #bebfc5; background: white; padding: 8px 25px; font-weight: 700; cursor: pointer; border-radius: 4px; }
-        .add-btn:hover { box-shadow: 0 3px 8px #e9e9eb; }
-
-        /* Cart */
         .sidebar { background: white; padding: 20px; border-radius: 16px; height: fit-content; position: sticky; top: 100px; }
         .btn-checkout { background: var(--swiggy-orange); color: white; border: none; padding: 15px; width: 100%; font-weight: 700; border-radius: 8px; cursor: pointer; margin-top: 20px; }
-        
-        .back-btn { margin-bottom: 20px; cursor: pointer; color: var(--swiggy-orange); font-weight: 600; display: inline-block; }
+        .back-btn { margin-bottom: 20px; cursor: pointer; color: var(--swiggy-orange); font-weight: 600; }
     </style>
 </head>
 <body>
 
 <nav>
-    <a href="#" class="logo" onclick="location.reload()">WARANGAL EATS</a>
-    <div>Search | Offers | Help</div>
+    <div class="logo" onclick="location.reload()">WARANGAL EATS</div>
+    <div>Search | Help | Sign In</div>
 </nav>
 
 <div class="container">
     <div class="main-content" id="main-view">
         <h2>Restaurants in Warangal</h2>
         <div id="restaurant-grid" class="grid">
-            <p>Loading the best tastes of Warangal...</p>
+            <p>Fetching the best menus for you...</p>
         </div>
     </div>
 
@@ -68,7 +59,7 @@
             allRestaurants = await res.json();
             renderRestaurants();
         } catch (e) {
-            document.getElementById('restaurant-grid').innerHTML = "Server Busy. Refreshing...";
+            document.getElementById('restaurant-grid').innerHTML = "Server waking up... Please refresh.";
         }
     }
 
@@ -80,7 +71,6 @@
                 <div class="card-info">
                     <h3>${r.name}</h3>
                     <p>★ ${r.rating} • ${r.location}</p>
-                    <p style="color: gray; font-size: 14px;">${r.tags.join(', ')}</p>
                 </div>
             </div>
         `).join('');
@@ -92,17 +82,12 @@
         const view = document.getElementById('main-view');
         
         view.innerHTML = `
-            <div class="back-btn" onclick="renderRestaurants()">← Back to Restaurants</div>
+            <div class="back-btn" onclick="renderRestaurants()">← Back</div>
             <div class="menu-list">
-                <h2>${res.name}</h2>
-                <p>${res.location} | Zero Delivery Cost</p>
-                <hr>
+                <h2>${res.name} Menu</h2>
                 ${res.menu.map(item => `
                     <div class="menu-item">
-                        <div>
-                            <strong>${item.item}</strong><br>
-                            <span>₹${item.price}</span>
-                        </div>
+                        <div><strong>${item.item}</strong><br>₹${item.price}</div>
                         <button class="add-btn" onclick="addToCart('${item.item}', ${item.price})">ADD</button>
                     </div>
                 `).join('')}
@@ -118,26 +103,28 @@
     function updateCartUI() {
         const content = document.getElementById('cart-content');
         const totalDiv = document.getElementById('cart-total');
-        if (cart.length === 0) {
-            content.innerHTML = "Your cart is empty.";
-            totalDiv.innerHTML = "";
-            return;
-        }
-        content.innerHTML = cart.map(i => `<div style="display:flex; justify-content:space-between;"><span>${i.name}</span><span>₹${i.price}</span></div>`).join('');
+        content.innerHTML = cart.map(i => `<div>${i.name} - ₹${i.price}</div>`).join('');
         const total = cart.reduce((sum, i) => sum + i.price, 0);
         totalDiv.innerHTML = `Total: ₹${total}`;
     }
 
     async function checkout() {
-        if (cart.length === 0) return alert("Cart is empty!");
-        
-        const orderPayload = {
-            res_id: selectedResId,
-            items: cart,
-            user: "Warangal_User_1"
-        };
-
+        if (!cart.length) return alert("Cart is empty!");
         try {
             const res = await fetch(`${BASE_URL}/orders`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json'
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ res_id: selectedResId, items: cart })
+            });
+            if (res.ok) {
+                alert("Order Sent! Wait for Restaurant acceptance.");
+                cart = [];
+                location.reload();
+            }
+        } catch (e) { alert("Error placing order."); }
+    }
+
+    fetchRestaurants();
+</script>
+</body>
+</html>
