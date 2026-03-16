@@ -1,4 +1,4 @@
-name: Deploy Food App to Azure
+name: Build and Deploy to Azure Container Apps
 
 on:
 push:
@@ -11,30 +11,28 @@ runs-on: ubuntu-latest
 
 
 steps:
+  - name: Checkout code
+    uses: actions/checkout@v4
 
-- name: Checkout code
-  uses: actions/checkout@v3
+  - name: Login to Azure
+    uses: azure/login@v1
+    with:
+      creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-- name: Login to Azure
-  uses: azure/login@v1
-  with:
-    creds: ${{ secrets.AZURE_CREDENTIALS }}
+  - name: Build and Push Image to ACR
+    run: |
+      az acr build \
+        --registry fooddeliveryacr123 \
+        --image restaurant-service:v1 \
+        .
 
-- name: Build and Push Image to ACR
-  run: |
-    az acr build \
-      --registry fooddeliveryacr123 \
-      --image restaurant-service:v1 \
-      ./Restaurantservice
-
-- name: Deploy to Azure Container Apps
-  run: |
-    az containerapp create \
-      --name restaurant-app \
-      --resource-group food-rg \
-      --environment food-env \
-      --image fooddeliveryacr123.azurecr.io/restaurant-service:v1 \
-      --target-port 5000 \
-      --ingress external \
-      --query properties.configuration.ingress.fqdn
+  - name: Deploy to Container Apps
+    run: |
+      az containerapp create \
+        --name restaurant-app \
+        --resource-group food-rg \
+        --environment food-env \
+        --image fooddeliveryacr123.azurecr.io/restaurant-service:v1 \
+        --target-port 5000 \
+        --ingress externa
 
