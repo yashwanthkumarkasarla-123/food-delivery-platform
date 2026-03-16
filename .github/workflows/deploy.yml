@@ -36,5 +36,5 @@ jobs:
             --image fooddeliveryacr123.azurecr.io/restaurant-service:v1 \
             --target-port 5000 \
             --ingress external \
-            --location centralus \
-            --logs-destination none
+            --location centralus
+            
