@@ -9,7 +9,7 @@ jobs:
 build-and-deploy:
 runs-on: ubuntu-latest
 
-```
+
 steps:
 
 - name: Checkout code
@@ -37,4 +37,4 @@ steps:
       --target-port 5000 \
       --ingress external \
       --query properties.configuration.ingress.fqdn
-```
+
