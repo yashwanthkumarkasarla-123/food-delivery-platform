@@ -18,13 +18,14 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Build and Push Image to ACR
+      - name: Log in to ACR
         run: |
-          az acr build \
-            --registry fooddeliveryacr123 \
-            --image restaurant-service:v1 \
-            --file Restaurantservice/Dockerfile \
-            ./Restaurantservice
+          az acr login --name fooddeliveryacr123
+
+      - name: Build and Push Image
+        run: |
+          docker build -t fooddeliveryacr123.azurecr.io/restaurant-service:v1 -f Restaurantservice/Dockerfile ./Restaurantservice
+          docker push fooddeliveryacr123.azurecr.io/restaurant-service:v1
 
       - name: Deploy Container App
         run: |
