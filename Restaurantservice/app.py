@@ -2,8 +2,9 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 app = Flask(__name__)
-# This line is the most important fix:
-CORS(app, resources={r"/*": {"origins": "*"}})
+
+# This line allows the Admin and Customer pages to talk to the API
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 # In-memory database
 restaurants = [
