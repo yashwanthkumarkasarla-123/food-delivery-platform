@@ -41,23 +41,35 @@ def health():
 def get_restaurants():
     return jsonify(restaurants)
 
-# --- CUSTOMER: PLACE ORDER ---
+# --- CUSTOMER: PLACE ORDER (Update this) ---
 @app.route("/orders", methods=["POST", "OPTIONS"])
 def place_order():
-    if request.method == "OPTIONS":
-        return jsonify({"status": "ok"}), 200
-        
+    if request.method == "OPTIONS": return jsonify({"status": "ok"}), 200
     data = request.json
+    
+    # Find restaurant name for the Rider's benefit
+    res_info = next((r for r in restaurants if r["id"] == data.get("res_id")), {"name": "Unknown"})
+
     new_order = {
         "order_id": len(orders) + 1,
-        "res_id": data.get("res_id"), 
+        "res_id": data.get("res_id"),
+        "restaurant_name": res_info["name"], # Added this
+        "location": res_info.get("location", "Warangal"), # Added this
         "status": "PENDING_RESTAURANT",
         "items": data.get("items", []),
         "total": data.get("total", 0),
+        "assigned_rider": None,
         "created_at": time.time()
     }
     orders.append(new_order)
     return jsonify(new_order), 201
+
+# --- RIDER: VIEW READY ORDERS (New Route) ---
+@app.route("/rider/available-orders", methods=["GET"])
+def get_rider_orders():
+    # Riders only care about orders being prepared or ready
+    ready_orders = [o for o in orders if o["status"] == "PREPARING"]
+    return jsonify(ready_orders), 200
 
 # --- PARTNER: MANAGE SPECIFIC RESTAURANT ORDERS ---
 @app.route("/restaurant/manage-orders/<int:res_id>", methods=["GET"])
