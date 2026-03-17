@@ -3,198 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warangal Eats | Food Delivery</title>
+    <title>Warangal Eats | Premium Food Delivery</title>
     <style>
-        /* --- DESIGN SYSTEM --- */
+        /* --- DARK THEME DESIGN SYSTEM --- */
         :root { 
-            --swiggy-orange: #fc8019; 
-            --dark-text: #282c3f; 
+            --accent-orange: #fc8019; 
+            --bg-body: #0a0a0b; 
+            --card-bg: #1a1a1c;
+            --text-white: #ffffff;
+            --text-dim: #93959f;
             --p-green: #60b246; 
-            --bg-gray: #f4f7f6;
         }
 
         body { 
-            font-family: 'Segoe UI', sans-serif; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
             margin: 0; 
-            background: var(--bg-gray); 
-            color: var(--dark-text); 
-            padding-bottom: 80px; /* Space for the floating cart bar */
+            background: var(--bg-body); 
+            color: var(--text-white); 
+            padding-bottom: 100px;
         }
         
         /* --- NAVIGATION --- */
         .nav { 
-            background: white; 
+            background: rgba(10, 10, 11, 0.95); 
             padding: 15px 5%; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
-            position: sticky; 
-            top: 0; 
-            z-index: 100; 
+            border-bottom: 1px solid #2d2d30;
+            position: sticky; top: 0; z-index: 1000;
+            backdrop-filter: blur(10px);
         }
 
         .logo { 
-            font-size: 24px; 
-            font-weight: bold; 
-            color: var(--swiggy-orange); 
-            cursor: pointer; 
-            letter-spacing: -1px; 
+            font-size: 26px; font-weight: 800; 
+            color: var(--accent-orange); cursor: pointer; 
+            letter-spacing: -1px;
+        }
+
+        .cart-status {
+            background: #2d2d30; padding: 8px 15px; border-radius: 8px;
+            font-size: 14px; font-weight: bold; cursor: pointer;
         }
         
-        .container { padding: 20px 5%; max-width: 1200px; margin: auto; }
+        .container { padding: 30px 5%; max-width: 1200px; margin: auto; }
 
         /* --- RESTAURANT GRID --- */
         .grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-            gap: 25px; 
-            margin-top: 20px; 
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+            gap: 30px; margin-top: 25px; 
         }
 
         .card { 
-            background: white; 
-            border-radius: 12px; 
-            overflow: hidden; 
-            transition: 0.3s; 
-            cursor: pointer; 
-            border: 1px solid #eee; 
+            background: var(--card-bg); 
+            border-radius: 20px; overflow: hidden; 
+            transition: transform 0.3s ease, box-shadow 0.3s ease; 
+            cursor: pointer; border: 1px solid #2d2d30; 
         }
 
         .card:hover { 
-            transform: translateY(-5px); 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
+            transform: translateY(-8px); 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-color: #444;
         }
 
+        .card-img-wrapper { height: 200px; width: 100%; overflow: hidden; position: relative; }
+        
         .card-img { 
-            height: 160px; 
-            background: #e0e0e0; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            color: #888; 
-            font-size: 40px; 
-            font-weight: bold; 
+            height: 100%; width: 100%; 
+            object-fit: cover; 
+            transition: transform 0.5s ease;
         }
 
-        .card-info { padding: 15px; }
+        .card:hover .card-img { transform: scale(1.1); }
+
+        .card-info { padding: 20px; }
+        .res-name { font-size: 20px; font-weight: bold; margin-bottom: 5px; display: block; }
+        .res-tags { color: var(--text-dim); font-size: 14px; margin-bottom: 12px; }
+        .res-loc { font-size: 13px; color: var(--accent-orange); font-weight: 600; }
 
         /* --- MENU VIEW --- */
-        #menu-view { display: none; background: white; padding: 30px; border-radius: 12px; min-height: 400px; }
+        #menu-view { display: none; }
+        .menu-header { margin-bottom: 30px; border-bottom: 1px solid #2d2d30; padding-bottom: 20px; }
         
         .menu-item { 
-            display: flex; 
-            justify-content: space-between; 
-            padding: 20px 0; 
-            border-bottom: 1px solid #f1f1f1; 
+            display: flex; justify-content: space-between; 
+            padding: 25px 0; border-bottom: 1px solid #2d2d30; 
             align-items: center; 
         }
 
         .btn-add { 
-            border: 1px solid #bebfc5; 
-            background: white; 
-            color: var(--p-green); 
-            padding: 8px 30px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            border-radius: 4px; 
+            background: transparent; color: var(--p-green); 
+            border: 1px solid var(--p-green); padding: 10px 35px;
+            font-weight: 800; cursor: pointer; border-radius: 8px;
+            transition: 0.2s;
         }
 
-        /* --- TRACKING BOX --- */
-        #tracking-box { 
-            display: none; 
-            position: fixed; 
-            bottom: 30px; 
-            right: 30px; 
-            width: 320px; 
-            background: white; 
-            padding: 25px; 
-            border-radius: 16px; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15); 
-            border-top: 6px solid var(--swiggy-orange); 
-            z-index: 2000;
-        }
+        .btn-add:hover { background: var(--p-green); color: white; }
 
-        .progress { background: #eee; height: 10px; border-radius: 5px; margin: 20px 0; overflow: hidden; }
-        
-        #fill { 
-            background: var(--swiggy-orange); 
-            height: 100%; 
-            width: 0%; 
-            transition: 1.5s ease-in-out; 
-        }
-        
-        /* --- CART BAR --- */
+        /* --- FLOATING CART & TRACKING --- */
         .cart-bar { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            right: 0; 
-            background: var(--p-green); 
-            color: white; 
-            padding: 18px 5%; 
-            display: none; 
-            justify-content: space-between; 
-            align-items: center; 
-            cursor: pointer; 
-            font-weight: bold; 
-            z-index: 1000; 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: var(--p-green); color: white; padding: 20px 5%; 
+            display: none; justify-content: space-between; 
+            font-weight: bold; cursor: pointer; z-index: 1000;
         }
 
-        /* Live Indicator Animation */
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-        .live-dot { height: 10px; width: 10px; background: var(--swiggy-orange); border-radius: 50%; display: inline-block; margin-right: 8px; animation: pulse 1.5s infinite; }
+        #tracking-box { 
+            display: none; position: fixed; bottom: 20px; right: 20px; width: 340px; 
+            background: #1a1a1c; padding: 25px; border-radius: 16px; 
+            border: 2px solid var(--accent-orange); box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        }
+
+        .progress-bar { background: #333; height: 10px; border-radius: 5px; margin: 15px 0; overflow: hidden; }
+        #fill { background: var(--accent-orange); height: 100%; width: 0%; transition: 1.5s ease; }
     </style>
 </head>
 <body>
 
 <div class="nav">
     <div class="logo" onclick="location.reload()">Warangal Eats</div>
-    <div id="user-display" style="font-size: 14px; font-weight: bold; color: #666;"></div>
+    <div id="user-display" class="cart-status">Hi, Yashwanth</div>
 </div>
 
 <div class="container">
     <div id="home-view">
-        <h2 style="font-size: 28px; margin-bottom: 5px;">Warangal's Best Kitchens</h2>
-        <p style="color: #666; margin-bottom: 30px;">Choose a restaurant to start your order</p>
-        <div id="restaurant-grid" class="grid">Loading available restaurants...</div>
+        <h1 style="font-size: 36px; margin-bottom: 8px;">Premium Kitchens</h1>
+        <p style="color: var(--text-dim); margin-bottom: 40px;">Direct from Warangal's finest chefs to your doorstep.</p>
+        <div id="restaurant-grid" class="grid"></div>
     </div>
 
     <div id="menu-view">
-        <button onclick="showHome()" style="border:none; background:none; color:var(--swiggy-orange); font-weight:bold; cursor:pointer; margin-bottom:25px; font-size: 16px;">← Back to Restaurants</button>
-        <h1 id="menu-res-name" style="margin-bottom: 10px;">Menu</h1>
+        <button onclick="showHome()" style="background:none; border:none; color:var(--accent-orange); cursor:pointer; font-weight:bold; margin-bottom:20px;">← BACK TO RESTAURANTS</button>
+        <div class="menu-header">
+            <h1 id="menu-res-name" style="margin:0">Restaurant Name</h1>
+            <p id="menu-res-tags" style="color:var(--text-dim)"></p>
+        </div>
         <div id="menu-items"></div>
     </div>
 </div>
 
 <div id="cart-bar" class="cart-bar" onclick="placeOrder()">
-    <span id="cart-count">0 Items</span>
-    <span>PLACE ORDER (CASH ON DELIVERY) →</span>
+    <span id="cart-count">0 ITEMS</span>
+    <span>CHECKOUT (COD) →</span>
 </div>
 
 <div id="tracking-box">
-    <h3 style="margin:0"><span class="live-dot"></span>Live Tracking</h3>
-    <p id="status-text" style="color:var(--swiggy-orange); font-weight:bold; margin-top:10px;">Updating status...</p>
-    
-    <div class="progress">
-        <div id="fill"></div>
+    <h3 style="margin:0">Live Order Tracking</h3>
+    <p id="status-text" style="color:var(--accent-orange); font-weight:bold; margin-top:10px;">Connecting...</p>
+    <div class="progress-bar"><div id="fill"></div></div>
+    <div style="display:flex; justify-content:space-between; font-size:14px;">
+        <span>Payment: <b>COD</b></span>
+        <span id="order-total-display"></span>
     </div>
-    
-    <div style="display: flex; justify-content: space-between; font-size: 13px; color: #777;">
-        <span><strong>Total Amount:</strong></span>
-        <span id="order-total-display" style="color: #222; font-weight: bold;"></span>
-    </div>
-    <p style="font-size: 11px; color: #999; margin-top: 15px; text-align: center; border-top: 1px solid #eee; padding-top: 10px;">Pay the Rider via Cash/UPI on arrival.</p>
 </div>
 
 <script>
-    // --- 1. CONFIGURATION ---
     const API_BASE = 'https://restaurant-app.grayplant-35e8185c.centralus.azurecontainerapps.io';
     let cart = [];
     let activeResId = null;
     let allRestaurants = [];
 
-    // --- 2. RESTAURANT DATA FETCHING ---
+    // REAL IMAGE LINKS FOR WARANGAL RESTAURANTS
+    const restaurantImages = {
+        1: "https://images.unsplash.com/photo-1589302168068-964664d93dc0?q=80&w=1000&auto=format&fit=crop", // Biryani
+        2: "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?q=80&w=1000&auto=format&fit=crop", // Mandi
+        3: "https://images.unsplash.com/photo-1541014741259-de529411b96a?q=80&w=1000&auto=format&fit=crop"  // Curry
+    };
+
+    // 1. Load Restaurants
     async function loadRestaurants() {
         try {
             const res = await fetch(`${API_BASE}/restaurants`);
@@ -203,141 +181,102 @@
             
             grid.innerHTML = allRestaurants.map(r => `
                 <div class="card" onclick="showMenu(${r.id})">
-                    <div class="card-img">${r.name.charAt(0)}</div>
+                    <div class="card-img-wrapper">
+                        <img src="${restaurantImages[r.id] || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1000'}" class="card-img" alt="${r.name}">
+                    </div>
                     <div class="card-info">
-                        <strong style="font-size: 18px;">${r.name}</strong><br>
-                        <div style="color:#666; margin: 5px 0; font-size: 13px;">${r.tags.join(' • ')}</div>
-                        <div style="font-size: 12px; color: #999;">📍 ${r.location}</div>
+                        <span class="res-name">${r.name}</span>
+                        <div class="res-tags">${r.tags.join(' • ')}</div>
+                        <div class="res-loc">📍 ${r.location}</div>
                     </div>
                 </div>
             `).join('');
-        } catch (e) { 
-            console.error("API Connection Error");
-            document.getElementById('restaurant-grid').innerHTML = "<p>Unable to connect to server. Please try again later.</p>";
-        }
+        } catch (e) { console.error("API Offline"); }
     }
 
-    // --- 3. MENU NAVIGATION ---
+    // 2. Show Menu
     function showMenu(id) {
         activeResId = id;
         const res = allRestaurants.find(r => r.id === id);
-        
         document.getElementById('home-view').style.display = 'none';
         document.getElementById('menu-view').style.display = 'block';
         document.getElementById('menu-res-name').innerText = res.name;
-        
-        // Mock items (In a real app, these would come from your database)
+        document.getElementById('menu-res-tags').innerText = res.tags.join(' • ');
+
         const items = [
-            { name: "Special Chicken Biryani", price: 280 },
-            { name: "Family Pack Mandi", price: 750 },
+            { name: "Premium Chicken Biryani", price: 280 },
+            { name: "Special Mandi Platter", price: 750 },
             { name: "Paneer Butter Masala", price: 210 },
-            { name: "Butter Naan", price: 40 }
+            { name: "Garlic Naan", price: 45 }
         ];
 
         document.getElementById('menu-items').innerHTML = items.map(i => `
             <div class="menu-item">
-                <div><strong>${i.name}</strong><br>₹${i.price}</div>
+                <div>
+                    <div style="font-weight:bold; font-size:18px;">${i.name}</div>
+                    <div style="color:var(--text-dim)">₹${i.price}</div>
+                </div>
                 <button class="btn-add" onclick="addToCart('${i.name}', ${i.price})">ADD</button>
             </div>
         `).join('');
         window.scrollTo(0, 0);
     }
 
-    // --- 4. CART LOGIC ---
+    // 3. Cart Logic
     function addToCart(name, price) {
         cart.push({ name, price });
         const total = cart.reduce((sum, item) => sum + item.price, 0);
-        
         document.getElementById('cart-bar').style.display = 'flex';
-        document.getElementById('cart-count').innerText = `${cart.length} Item(s) | ₹${total}`;
+        document.getElementById('cart-count').innerText = `${cart.length} ITEMS | ₹${total}`;
     }
 
-    // --- 5. ORDER SUBMISSION ---
+    // 4. Order & Tracking
     async function placeOrder() {
-        const total = cart.reduce((sum, item) => sum + item.price, 0);
-        
-        // Prompt user for details (Simple way to handle checkout for demo)
-        const userName = prompt("Enter your name:", localStorage.getItem('user_name') || "Yashwanth");
-        const userAddr = prompt("Enter delivery address:", localStorage.getItem('user_addr') || "Hanamkonda, Warangal");
+        const total = cart.reduce((s, i) => s + i.price, 0);
+        const name = prompt("Enter Name:", localStorage.getItem('user_name') || "Yashwanth");
+        const addr = prompt("Delivery Address:", localStorage.getItem('user_addr') || "Hanamkonda, Warangal");
 
-        if (!userName || !userAddr) return;
+        if (!name || !addr) return;
+        if (!confirm(`Total: ₹${total}\nPayment: Cash on Delivery\n\nPlace Order?`)) return;
 
-        // Save to localStorage so user doesn't have to type it next time
-        localStorage.setItem('user_name', userName);
-        localStorage.setItem('user_addr', userAddr);
+        localStorage.setItem('user_name', name);
+        localStorage.setItem('user_addr', addr);
 
-        try {
-            const response = await fetch(`${API_BASE}/orders`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    res_id: activeResId,
-                    customer_name: userName,
-                    address: userAddr,
-                    items: cart,
-                    total: total
-                })
-            });
+        const response = await fetch(`${API_BASE}/orders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ res_id: activeResId, customer_name: name, address: addr, items: cart, total: total })
+        });
 
-            const order = await response.json();
-            if (order.order_id) {
-                // Save active order ID to keep tracking active after page refresh
-                localStorage.setItem('active_order_id', order.order_id);
-                cart = []; // Reset local cart
-                startTracking(order.order_id);
-            }
-        } catch (e) {
-            alert("Failed to place order. Check your internet connection.");
+        const order = await response.json();
+        if (order.order_id) {
+            localStorage.setItem('active_order_id', order.order_id);
+            startTracking(order.order_id);
         }
     }
 
-    // --- 6. POLLING & TRACKING LOGIC ---
     function startTracking(orderId) {
-        // Reset UI to show Home and the Tracking Widget
         document.getElementById('cart-bar').style.display = 'none';
-        document.getElementById('home-view').style.display = 'block';
-        document.getElementById('menu-view').style.display = 'none';
         document.getElementById('tracking-box').style.display = 'block';
         
-        // Poll the server every 4 seconds for status updates
-        const pollInterval = setInterval(async () => {
+        setInterval(async () => {
             try {
                 const res = await fetch(`${API_BASE}/order-status/${orderId}`);
                 const data = await res.json();
                 
-                // Map Backend statuses to UI messages and Progress bar width
                 const statusMap = {
-                    'PENDING_RESTAURANT': { text: 'Waiting for restaurant...', fill: '15%', color: '#fc8019' },
-                    'PREPARING': { text: 'Kitchen is preparing food...', fill: '45%', color: '#fc8019' },
-                    'READY_FOR_PICKUP': { text: 'Food ready! Finding rider...', fill: '65%', color: '#fc8019' },
-                    'OUT_FOR_DELIVERY': { text: 'Rider is on the way!', fill: '85%', color: '#60b246' },
-                    'DELIVERED': { text: 'Order Delivered! (Paid COD)', fill: '100%', color: '#60b246' },
-                    'REJECTED': { text: 'Order was rejected by kitchen.', fill: '0%', color: 'red' }
+                    'PENDING_RESTAURANT': { text: 'Waiting for Restaurant...', fill: '15%' },
+                    'PREPARING': { text: 'Chef is cooking...', fill: '45%' },
+                    'READY_FOR_PICKUP': { text: 'Food is packed!', fill: '65%' },
+                    'OUT_FOR_DELIVERY': { text: 'Rider is nearby!', fill: '85%' },
+                    'DELIVERED': { text: 'Delivered! Enjoy!', fill: '100%' }
                 };
 
-                const current = statusMap[data.status] || { text: 'Processing...', fill: '5%', color: '#fc8019' };
-                
-                // Update UI elements
+                const current = statusMap[data.status] || { text: 'Syncing...', fill: '5%' };
                 document.getElementById('status-text').innerText = current.text;
-                document.getElementById('status-text').style.color = current.color;
                 document.getElementById('fill').style.width = current.fill;
-                document.getElementById('fill').style.background = current.color;
                 document.getElementById('order-total-display').innerText = `₹${data.total}`;
-
-                // Handle terminal states (End polling)
-                if (data.status === 'DELIVERED' || data.status === 'REJECTED') {
-                    clearInterval(pollInterval);
-                    setTimeout(() => {
-                        localStorage.removeItem('active_order_id');
-                        if (data.status === 'REJECTED') {
-                            alert("Sorry, the restaurant cannot take your order right now.");
-                            document.getElementById('tracking-box').style.display = 'none';
-                        }
-                    }, 5000);
-                }
-            } catch (e) { 
-                console.log("Syncing with server..."); 
-            }
+            } catch (e) {}
         }, 4000);
     }
 
@@ -346,17 +285,10 @@
         document.getElementById('menu-view').style.display = 'none';
     }
 
-    // --- 7. ON PAGE LOAD ---
     window.onload = () => {
         loadRestaurants();
-        
-        // Resume tracking if there's an active order in localStorage
         const savedOrderId = localStorage.getItem('active_order_id');
         if (savedOrderId) startTracking(savedOrderId);
-
-        // Display user name if available
-        const savedName = localStorage.getItem('user_name');
-        if (savedName) document.getElementById('user-display').innerText = `Hi, ${savedName}`;
     };
 </script>
 
