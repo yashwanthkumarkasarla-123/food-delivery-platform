@@ -2,57 +2,41 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Warangal Eats | Rider App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rider Dashboard | Warangal Eats</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; padding: 20px; }
-        .rider-card { background: #2d2d2d; padding: 20px; border-radius: 12px; border-left: 6px solid #60b246; margin-bottom: 15px; }
-        .btn-claim { background: #60b246; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .status-badge { background: #444; padding: 5px 10px; border-radius: 4px; font-size: 12px; }
+        :root { --rider-orange: #fc8019; --bg-dark: #121212; --card-bg: #1e1e1e; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-dark); color: white; margin: 0; padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+        
+        .order-card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 15px; border-left: 5px solid var(--rider-orange); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .status-badge { float: right; font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 4px; background: #333; color: var(--rider-orange); text-transform: uppercase; }
+        
+        .res-name { font-size: 18px; font-weight: bold; margin: 0; color: #fff; }
+        .res-loc { font-size: 13px; color: #aaa; margin: 5px 0; }
+        .payout { color: #60b246; font-weight: bold; margin-top: 10px; display: block; }
+        
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s; }
+        .btn-pickup { background: var(--rider-orange); color: white; }
+        .btn-complete { background: #60b246; color: white; }
+        .empty-state { text-align: center; margin-top: 100px; color: #666; }
     </style>
 </head>
 <body>
-    <h1>Rider Portal 🛵</h1>
-    <div id="rider-orders">Searching for ready pickups in Warangal...</div>
 
-    <script>
-        const API_URL = 'https://restaurant-app.grayplant-35e8185c.centralus.azurecontainerapps.io';
+<header>
+    <h2>🛵 Rider Portal</h2>
+    <div style="font-size: 14px; color: #60b246;">● Online</div>
+</header>
 
-        async function getDeliveries() {
-            try {
-                // Riders look for orders that are PREPARING
-                const res = await fetch(`${API_URL}/restaurant/manage-orders`); 
-                const orders = await res.json();
-                const container = document.getElementById('rider-orders');
+<div id="rider-orders-list">
+    <div class="empty-state">Searching for prepared meals in Warangal...</div>
+</div>
 
-                if (orders.length === 0) {
-                    container.innerHTML = "<p>No orders ready for pickup.</p>";
-                    return;
-                }
+<script>
+    const API_BASE = 'https://restaurant-app.grayplant-35e8185c.centralus.azurecontainerapps.io';
 
-                container.innerHTML = orders.map(o => `
-                    <div class="rider-card">
-                        <span class="status-badge">READY FOR PICKUP</span>
-                        <h3>Order #${o.order_id}</h3>
-                        <p>Location: Hanamkonda / Subedari</p>
-                        <button class="btn-claim" onclick="claimOrder(${o.order_id})">START DELIVERY</button>
-                    </div>
-                `).join('');
-            } catch (e) { console.log("Waiting for backend..."); }
-        }
-
-        async function claimOrder(id) {
-            const res = await fetch(`${API_URL}/rider/claim`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ order_id: id, rider_name: "Rajesh - Warangal Express" })
-            });
-            const data = await res.json();
-            alert("Order Claimed! Moving to Out for Delivery.");
-            getDeliveries();
-        }
-
-        setInterval(getDeliveries, 5000);
-        getDeliveries();
-    </script>
-</body>
-</html>
+    async function fetchRiderJobs() {
+        try {
+            // Fetch restaurants and orders in parallel for speed
+            const [resResponse, orderResponse] = await Promise.all(
