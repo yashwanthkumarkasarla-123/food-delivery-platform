@@ -8,7 +8,6 @@
         :root { --partner-green: #003d29; --accent-green: #60b246; --pending-orange: #fc8019; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; color: #333; }
         
-        /* Sidebar/Header */
         header { 
             background: var(--partner-green); color: white; padding: 15px 5%; 
             display: flex; justify-content: space-between; align-items: center;
@@ -16,12 +15,10 @@
         }
         .live-indicator { background: var(--accent-green); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
         
-        /* Layout */
         .main-content { padding: 30px 5%; }
         .stats-bar { display: flex; gap: 20px; margin-bottom: 30px; }
         .stat-card { background: white; padding: 20px; border-radius: 10px; flex: 1; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        /* Order Cards */
         .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
         .order-card { 
             background: white; border-radius: 12px; padding: 20px; 
@@ -32,7 +29,6 @@
 
         .items-box { background: #fafafa; padding: 12px; border-radius: 8px; margin: 15px 0; border: 1px solid #eee; }
         
-        /* Action Buttons */
         .btn-group { display: flex; gap: 10px; margin-top: 20px; }
         button { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-accept { background: var(--accent-green); color: white; }
@@ -40,7 +36,6 @@
         .btn-logout { background: transparent; border: 1px solid white; color: white; padding: 5px 15px; font-size: 12px; }
         .btn-logout:hover { background: white; color: var(--partner-green); }
 
-        /* Empty State */
         .empty-state { text-align: center; padding: 100px 0; grid-column: 1/-1; }
     </style>
 </head>
@@ -79,6 +74,7 @@
     
     // 1. Session & Identity Management
     const urlParams = new URLSearchParams(window.location.search);
+    // Prioritize URL param, fallback to localStorage
     const myResId = urlParams.get('res_id') || localStorage.getItem('res_id');
     const resName = localStorage.getItem('activeRestaurant') || "Restaurant Partner";
 
@@ -91,7 +87,7 @@
     document.getElementById('res-display-name').innerText = resName;
     document.getElementById('res-sub-text').innerText = `${resName} - Warangal Branch`;
 
-    // 2. Fetch Orders for THIS specific restaurant
+    // 2. Fetch Orders
     async function fetchOrders() {
         try {
             const res = await fetch(`${API_BASE}/restaurant/manage-orders/${myResId}`);
@@ -104,19 +100,19 @@
                     <div class="empty-state">
                         <p style="font-size: 40px;">☕</p>
                         <h3>No pending orders yet.</h3>
-                        <p style="color: #888;">New orders for ${resName} will appear here automatically.</p>
+                        <p style="color: #888;">Orders for ${resName} will appear here.</p>
                     </div>`;
                 return;
             }
 
             container.innerHTML = orders.map(order => `
-                <div class="order-card ${order.status === 'PREPARING' ? 'preparing' : ''}">
+                <div class="order-card ${order.status === 'PREPARING' || order.status === 'OUT_FOR_DELIVERY' ? 'preparing' : ''}">
                     <div style="display:flex; justify-content:space-between; align-items:start;">
                         <div>
                             <span style="font-size: 12px; color: #888;">ORDER ID</span><br>
                             <strong>#${order.order_id}</strong>
                         </div>
-                        <span style="color:var(--pending-orange); font-weight:bold; font-size:12px;">${order.status}</span>
+                        <span style="color:var(--pending-orange); font-weight:bold; font-size:11px; text-transform:uppercase;">${order.status.replace(/_/g, ' ')}</span>
                     </div>
 
                     <div class="items-box">
@@ -134,19 +130,19 @@
                             <button class="btn-accept" onclick="processAction(${order.order_id}, 'ACCEPT')">ACCEPT ORDER</button>
                         </div>
                     ` : `
-                        <div style="margin-top:20px; padding:10px; background:#e8f5e9; color:var(--accent-green); border-radius:5px; text-align:center; font-weight:bold;">
-                            🍳 KITCHEN PREPARING
+                        <div style="margin-top:20px; padding:10px; background:#e8f5e9; color:var(--accent-green); border-radius:5px; text-align:center; font-weight:bold; font-size:14px;">
+                            ${order.status === 'PREPARING' ? '🍳 KITCHEN PREPARING' : '🛵 OUT FOR DELIVERY'}
                         </div>
                     `}
                 </div>
             `).join('');
 
         } catch (e) {
-            console.error("Connection to Azure Backend failed.");
+            console.error("Connection failed.");
         }
     }
 
-    // 3. Process Restaurant Actions
+    // 3. Process Actions
     async function processAction(orderId, action) {
         try {
             const res = await fetch(`${API_BASE}/restaurant/action`, {
@@ -156,17 +152,15 @@
             });
             if(res.ok) fetchOrders();
         } catch (e) {
-            alert("Error updating order status.");
+            alert("Action failed.");
         }
     }
 
-    // 4. Logout Logic
     function logout() {
         localStorage.clear();
         window.location.href = 'partner-login.html';
     }
 
-    // Auto-refresh every 5 seconds
     setInterval(fetchOrders, 5000);
     window.onload = fetchOrders;
 </script>
