@@ -4,10 +4,11 @@ import time
 
 app = Flask(__name__)
 
-# Essential for cross-domain communication between GitHub Pages and Azure
+# Enable CORS to allow requests from your GitHub Pages frontend to your Azure-hosted backend
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
-# In-memory database with MENU items added back in
+# --- IN-MEMORY DATABASE ---
+# Note: In a production app, this would be replaced by a SQL (PostgreSQL) or NoSQL (MongoDB) database.
 restaurants = [
     {
         "id": 1, "name": "Raiyaan's Hotel", "location": "Subedari", "rating": 4.5, 
@@ -23,83 +24,93 @@ restaurants = [
         "id": 3, "name": "Kritunga Restaurant", "location": "Naimnagar", "rating": 4.8, 
         "tags": ["Rayalaseema"],
         "menu": [{"item": "Ragi Sangati", "price": 180}, {"item": "Natukodi Pulusu", "price": 320}]
-    },
-    {
-        "id": 4, "name": "Suprabha Hotel", "location": "Hanamkonda", "rating": 4.2, 
-        "tags": ["South Indian Veg"],
-        "menu": [{"item": "Ghee Roast Dosa", "price": 80}, {"item": "South Indian Thali", "price": 150}]
     }
 ]
 
+# List to store all orders placed during the current server session
 orders = []
 
-@app.route("/")
-def health():
-    return jsonify({"status": "Warangal Eats Backend Online", "timestamp": time.time()}), 200
+# --- CUSTOMER ROUTES ---
 
 @app.route("/restaurants", methods=["GET"])
 def get_restaurants():
+    """Returns the list of all available restaurants and their menus."""
     return jsonify(restaurants)
 
-# --- CUSTOMER: PLACE ORDER (Update this) ---
 @app.route("/orders", methods=["POST", "OPTIONS"])
 def place_order():
-    if request.method == "OPTIONS": return jsonify({"status": "ok"}), 200
+    """Handles new order placement from the customer app."""
+    if request.method == "OPTIONS": 
+        return jsonify({"status": "ok"}), 200 # Handle CORS pre-flight requests
+        
     data = request.json
-    
-    # Find restaurant name for the Rider's benefit
-    res_info = next((r for r in restaurants if r["id"] == data.get("res_id")), {"name": "Unknown"})
-
     new_order = {
         "order_id": len(orders) + 1,
         "res_id": data.get("res_id"),
-        "restaurant_name": res_info["name"], # Added this
-        "location": res_info.get("location", "Warangal"), # Added this
-        "status": "PENDING_RESTAURANT",
+        "status": "PENDING_RESTAURANT", # Initial state
         "items": data.get("items", []),
         "total": data.get("total", 0),
-        "assigned_rider": None,
-        "created_at": time.time()
+        "assigned_rider": None
     }
     orders.append(new_order)
     return jsonify(new_order), 201
 
-# --- RIDER: VIEW READY ORDERS (New Route) ---
-@app.route("/rider/available-orders", methods=["GET"])
-def get_rider_orders():
-    # Riders only care about orders being prepared or ready
-    ready_orders = [o for o in orders if o["status"] == "PREPARING"]
-    return jsonify(ready_orders), 200
+# --- RESTAURANT PARTNER ROUTES ---
 
-# --- PARTNER: MANAGE SPECIFIC RESTAURANT ORDERS ---
 @app.route("/restaurant/manage-orders/<int:res_id>", methods=["GET"])
 def manage_orders(res_id):
-    active_orders = [o for o in orders if o.get("res_id") == res_id and o["status"] != "DELIVERED"]
-    return jsonify(active_orders), 200
+    """Fetches active orders for a specific restaurant ID."""
+    # Filters out orders that don't belong to the restaurant or are already completed
+    active = [o for o in orders if o.get("res_id") == res_id and o["status"] != "DELIVERED"]
+    return jsonify(active), 200
 
-# --- PARTNER: ACCEPT/REJECT ACTION ---
 @app.route("/restaurant/action", methods=["POST", "OPTIONS"])
 def restaurant_action():
-    if request.method == "OPTIONS":
-        return jsonify({"status": "ok"}), 200
-        
-    data = request.json
-    order_id = data.get('order_id')
-    action = data.get('action')
+    """Allows restaurants to ACCEPT or REJECT a pending order."""
+    if request.method == "OPTIONS": return jsonify({"status": "ok"}), 200
     
-    order = next((o for o in orders if o["order_id"] == order_id), None)
+    data = request.json
+    # Find the specific order in our list
+    order = next((o for o in orders if o["order_id"] == data['order_id']), None)
     if order:
-        order["status"] = "PREPARING" if action == "ACCEPT" else "REJECTED"
-        return jsonify({"message": f"Order {action}ED"}), 200
+        # If accepted, status moves to PREPARING, triggering visibility for the Rider
+        order["status"] = "PREPARING" if data['action'] == "ACCEPT" else "REJECTED"
+        return jsonify({"message": "Success"}), 200
+    return jsonify({"error": "Not Found"}), 404
+
+# --- RIDER SPECIFIC ROUTES ---
+
+@app.route("/rider/available-orders", methods=["GET"])
+def get_rider_orders():
+    """Fetches orders that are ready for pickup or currently being delivered."""
+    relevant = ["PREPARING", "OUT_FOR_DELIVERY"]
+    available = [o for o in orders if o["status"] in relevant]
+    return jsonify(available), 200
+
+@app.route("/rider/action", methods=["POST", "OPTIONS"])
+def rider_action():
+    """Handles the delivery lifecycle: Picking up from restaurant and delivering to customer."""
+    if request.method == "OPTIONS": return jsonify({"status": "ok"}), 200
+    
+    data = request.json
+    order = next((o for o in orders if o["order_id"] == data['order_id']), None)
+    if order:
+        if data['action'] == 'PICKUP':
+            order["status"] = "OUT_FOR_DELIVERY"
+            order["assigned_rider"] = data.get('rider_name', 'Rajesh')
+        elif data['action'] == 'DELIVER':
+            order["status"] = "DELIVERED"
+        return jsonify({"message": "Status Updated"}), 200
     return jsonify({"error": "Order not found"}), 404
 
-# --- CUSTOMER: TRACK STATUS ---
+# --- TRACKING ROUTE ---
+
 @app.route("/order-status/<int:order_id>", methods=["GET"])
 def get_status(order_id):
+    """Real-time endpoint for the customer app to poll for status updates."""
     order = next((o for o in orders if o["order_id"] == order_id), None)
-    if order:
-        return jsonify(order), 200
-    return jsonify({"error": "Order not found"}), 404
+    return jsonify(order) if order else (jsonify({"error": "Not Found"}), 404)
 
 if __name__ == "__main__":
+    # Host 0.0.0.0 is required for Docker/Azure Container Apps to expose the service
     app.run(host="0.0.0.0", port=5000)
