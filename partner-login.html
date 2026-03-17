@@ -5,185 +5,148 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Partner Login | Warangal Eats</title>
     <style>
-        :root {
-            --partner-green: #003d29;
-            --swiggy-orange: #fc8019;
-            --error-red: #d9534f;
+        :root { 
+            --swiggy-orange: #fc8019; 
+            --dark-blue: #282c3f; 
+            --text-gray: #686b78;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--dark-blue); 
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; margin: 0; 
         }
 
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+        .login-card {
+            background: white; padding: 40px; border-radius: 16px;
+            width: 100%; max-width: 360px; text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
         }
 
-        .login-container {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
+        .logo { 
+            color: var(--swiggy-orange); 
+            font-size: 32px; 
+            font-weight: 800; 
+            margin-bottom: 8px;
+            letter-spacing: -1px;
         }
 
-        .brand {
-            font-size: 28px;
-            font-weight: 800;
-            color: var(--partner-green);
-            margin-bottom: 5px;
-        }
+        h2 { margin: 0; color: var(--dark-blue); font-size: 20px; }
+        p { color: var(--text-gray); font-size: 14px; margin-bottom: 30px; }
 
-        .subtitle {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 30px;
-            letter-spacing: 1px;
-        }
-
-        .form-group {
-            text-align: left;
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
+        .input-group { text-align: left; margin-bottom: 20px; }
+        label { font-size: 12px; font-weight: bold; color: var(--text-gray); text-transform: uppercase; margin-bottom: 5px; display: block; }
 
         input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 16px;
+            width: 100%; padding: 14px; 
+            border: 1px solid #d4d5d9; border-radius: 8px; box-sizing: border-box;
+            font-size: 16px; outline: none; transition: 0.2s;
         }
 
-        button {
-            width: 100%;
-            padding: 14px;
-            background-color: var(--partner-green);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        input:focus { border-color: var(--swiggy-orange); }
+
+        .btn-login {
+            width: 100%; padding: 15px; background: var(--swiggy-orange);
+            color: white; border: none; border-radius: 8px;
+            font-weight: bold; font-size: 16px; cursor: pointer; 
+            transition: 0.3s; margin-top: 10px;
         }
 
-        .error-box {
-            background: #ffecec;
-            color: var(--error-red);
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 13px;
-            margin-bottom: 20px;
-            display: none;
-            border: 1px solid #f5c6cb;
+        .btn-login:hover { background: #e67316; transform: translateY(-2px); }
+        .btn-login:active { transform: translateY(0); }
+
+        .demo-box {
+            background: #f4f7f6; border-radius: 8px; padding: 15px;
+            margin-top: 25px; text-align: left; border: 1px dashed #ccc;
         }
 
-        .spinner {
-            display: none;
-            width: 18px;
-            height: 18px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .demo-box strong { font-size: 12px; color: var(--dark-blue); }
+        .demo-list { font-size: 12px; color: var(--text-gray); margin-top: 5px; line-height: 1.6; }
+        
+        .error-msg { color: #ff4757; font-size: 12px; margin-top: -10px; margin-bottom: 10px; display: none; }
     </style>
 </head>
 <body>
 
-<div class="login-container">
-    <div class="brand">Warangal Eats</div>
-    <div class="subtitle">PARTNER PORTAL</div>
-
-    <div id="error-message" class="error-box"></div>
-
-    <div class="form-group">
-        <label>RESTAURANT ID</label>
-        <input type="text" id="res-id" placeholder="e.g. KRITUNGA01" autocomplete="off">
+<div class="login-card">
+    <div class="logo">Warangal Eats</div>
+    <h2>Partner Central</h2>
+    <p>Please enter your credentials to manage orders.</p>
+    
+    <div class="input-group">
+        <label>Restaurant ID</label>
+        <input type="number" id="res-id-input" placeholder="Enter ID (e.g. 1)" autofocus>
     </div>
 
-    <div class="form-group">
-        <label>PASSWORD</label>
-        <input type="password" id="res-pass" placeholder="••••••••">
+    <div class="input-group">
+        <label>Access Code</label>
+        <input type="password" id="pass-input" placeholder="••••••••">
     </div>
 
-    <button id="login-btn" onclick="attemptLogin()">
-        <span id="btn-text">LOGIN TO DASHBOARD</span>
-        <div id="btn-spinner" class="spinner"></div>
-    </button>
+    <div id="error-box" class="error-msg">Invalid ID or Access Code</div>
 
-    <p style="margin-top: 20px; font-size: 11px; color: #999;">
-        Credentials Hint: Use <b>KRITUNGA01</b> or <b>RAIYAAN01</b> with <b>warangal123</b>
-    </p>
+    <button class="btn-login" id="login-btn" onclick="handleLogin()">LOGIN TO DASHBOARD</button>
+
+    <div class="demo-box">
+        <strong>DEMO ACCOUNTS (Use any ID):</strong>
+        <div class="demo-list">
+            1 • Raiyaan's Hotel (Subedari)<br>
+            2 • Mandi.com (Hanamkonda)<br>
+            3 • Kritunga Restaurant (Naimnagar)
+        </div>
+    </div>
 </div>
 
 <script>
-    function attemptLogin() {
-        const idInput = document.getElementById('res-id');
-        const passInput = document.getElementById('res-pass');
-        const errorBox = document.getElementById('error-message');
-        const btnText = document.getElementById('btn-text');
-        const btnSpinner = document.getElementById('btn-spinner');
+    function handleLogin() {
+        const id = document.getElementById('res-id-input').value;
+        const pass = document.getElementById('pass-input').value;
+        const btn = document.getElementById('login-btn');
+        const errorBox = document.getElementById('error-box');
 
-        errorBox.style.display = 'none';
-        
-        if (!idInput.value || !passInput.value) {
-            errorBox.innerText = "Please fill in all fields.";
-            errorBox.style.display = 'block';
+        // Simple Validation
+        if (!id) {
+            alert("Please enter a Restaurant ID");
             return;
         }
 
-        btnText.style.display = 'none';
-        btnSpinner.style.display = 'block';
+        // Visual feedback
+        btn.innerText = "VERIFYING...";
+        btn.style.opacity = "0.7";
 
-        // Simulated Database Check
+        // Map IDs to Names for a personalized dashboard experience
+        const names = {
+            "1": "Raiyaan's Hotel",
+            "2": "Mandi.com",
+            "3": "Kritunga Restaurant"
+        };
+
+        // Simulated login delay
         setTimeout(() => {
-            const partnerAccounts = {
-                "RAIYAAN01": { id: 1, pass: "warangal123", name: "Raiyaan's Hotel" },
-                "MANDI01":   { id: 2, pass: "warangal123", name: "Mandi.com" },
-                "KRITUNGA01": { id: 3, pass: "warangal123", name: "Kritunga Restaurant" },
-                "SUPRABHA01": { id: 4, pass: "warangal123", name: "Suprabha Hotel" }
-            };
-
-            const user = idInput.value.toUpperCase();
-            const pass = passInput.value;
-
-            if (partnerAccounts[user] && partnerAccounts[user].pass === pass) {
-                // Success: Store specific restaurant details
-                localStorage.setItem('isPartnerLoggedIn', 'true');
-                localStorage.setItem('res_id', partnerAccounts[user].id);
-                localStorage.setItem('activeRestaurant', partnerAccounts[user].name);
+            const resName = names[id];
+            
+            if (resName) {
+                // Success! Store info for the dashboard
+                localStorage.setItem('active_res_id', id);
+                localStorage.setItem('active_res_name', resName);
                 
-                // Redirect with the ID in the URL for the dashboard to use
-                window.location.href = `partner.html?res_id=${partnerAccounts[user].id}`;
+                // Redirect to partner.html
+                window.location.href = `partner.html?res_id=${id}`;
             } else {
                 // Failure
-                btnText.style.display = 'block';
-                btnSpinner.style.display = 'none';
-                errorBox.innerText = "Invalid credentials. Access Denied.";
-                errorBox.style.display = 'block';
+                btn.innerText = "LOGIN TO DASHBOARD";
+                btn.style.opacity = "1";
+                errorBox.style.display = "block";
+                errorBox.innerText = "ID not recognized in our Warangal network.";
             }
-        }, 1200);
+        }, 8000); // 0.8s fake loading
     }
 
-    // Support for Enter key
-    document.addEventListener('keypress', (e) => { if(e.key === 'Enter') attemptLogin(); });
+    // Allow "Enter" key to trigger login
+    document.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') handleLogin();
+    });
 </script>
 
 </body>
