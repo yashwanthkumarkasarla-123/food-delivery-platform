@@ -3,40 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rider Dashboard | Warangal Eats</title>
+    <title>Rider Portal | Warangal Eats</title>
     <style>
-        :root { --rider-orange: #fc8019; --bg-dark: #121212; --card-bg: #1e1e1e; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-dark); color: white; margin: 0; padding: 20px; }
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+        :root { 
+            --rider-blue: #2f3640;
+            --delivery-green: #4cd137;
+            --pickup-yellow: #fbc531;
+            --text-white: #f5f6fa;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: #1e272e; color: var(--text-white); margin: 0; padding: 0; }
         
-        .order-card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 15px; border-left: 5px solid var(--rider-orange); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .status-badge { float: right; font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 4px; background: #333; color: var(--rider-orange); text-transform: uppercase; }
+        .header { background: var(--rider-blue); padding: 20px; text-align: center; border-bottom: 3px solid var(--delivery-green); }
         
-        .res-name { font-size: 18px; font-weight: bold; margin: 0; color: #fff; }
-        .res-loc { font-size: 13px; color: #aaa; margin: 5px 0; }
-        .payout { color: #60b246; font-weight: bold; margin-top: 10px; display: block; }
+        .container { padding: 20px; max-width: 600px; margin: auto; }
+
+        .job-card { 
+            background: #2f3640; border-radius: 15px; padding: 20px; margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3); border-left: 8px solid var(--pickup-yellow);
+        }
+        .job-card.delivering { border-left-color: var(--delivery-green); }
+
+        .address-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin: 15px 0; }
+        .address-box p { margin: 5px 0; font-size: 14px; }
         
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s; }
-        .btn-pickup { background: var(--rider-orange); color: white; }
-        .btn-complete { background: #60b246; color: white; }
-        .empty-state { text-align: center; margin-top: 100px; color: #666; }
+        .label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #888; }
+        
+        .btn { 
+            width: 100%; padding: 15px; border: none; border-radius: 10px; 
+            font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-pickup { background: var(--pickup-yellow); color: #000; }
+        .btn-deliver { background: var(--delivery-green); color: #fff; }
+        
+        .status-badge { float: right; font-size: 12px; padding: 4px 8px; border-radius: 4px; background: rgba(255,255,255,0.1); }
+        
+        .empty-state { text-align: center; margin-top: 100px; color: #888; }
     </style>
 </head>
 <body>
 
-<header>
-    <h2>🛵 Rider Portal</h2>
-    <div style="font-size: 14px; color: #60b246;">● Online</div>
-</header>
+<div class="header">
+    <h2 style="margin:0;">🛵 Rider Portal</h2>
+    <p style="margin:5px 0 0 0; font-size:12px; opacity:0.7;">Warangal Logistics Division</p>
+</div>
 
-<div id="rider-orders-list">
-    <div class="empty-state">Searching for prepared meals in Warangal...</div>
+<div class="container" id="jobs-container">
+    <div class="empty-state">Searching for available orders in Warangal...</div>
 </div>
 
 <script>
     const API_BASE = 'https://restaurant-app.grayplant-35e8185c.centralus.azurecontainerapps.io';
 
-    async function fetchRiderJobs() {
+    async function refreshRiderApp() {
         try {
-            // Fetch restaurants and orders in parallel for speed
-            const [resResponse, orderResponse] = await Promise.all(
+            // 1. Fetch Restaurants (to get pickup locations)
+            const resData = await fetch(`${API_BASE}/restaurants`);
+            const restaurants = await resData.json();
+
+            // 2. Fetch Orders assigned to Rider logic
+            const orderData = await fetch(`${API_BASE}/rider/available-orders`);
+            const orders = await orderData.json();
+
+            const container = document.getElementById('jobs-container');
+
+            if (orders.length === 0) {
+                container.innerHTML = `<div class="empty-state"><h3>No jobs available</h3><p>Wait for restaurants to mark food as ready.</p></div>`;
+                return;
+            }
+
+            container.innerHTML = orders.map(o => {
+                const restaurant = restaurants.find(r => r.id === o.res_id) || {name: "Unknown", location: "Warangal"};
+                const isOut = o.status === 'OUT_FOR_DELIVERY';
+
+                return `
+                    <div class="job-card ${isOut ? 'delivering' : ''}">
+                        <span class="status-badge">${o.status.replace(/_/g, ' ')}</span>
+                        <h3 style="margin:0;">Order #${o.order_id}</h3>
+                        
+                        <div class="address-box">
+                            <p><span class="label">FROM (PICKUP):</span><br><strong>${restaurant.name}</strong><br>${restaurant.location}</p>
+                            <hr style="opacity:0.1; margin:10px 0;">
+                            <p><span class="label">TO (DELIVER):</span><br><strong>${o.customer_name || 'Yashwanth'}</strong><br>${o.delivery_address || 'Calculating Address...'}</p>
+                        </div>
+
+                        <div style="margin-bottom:15px;">
+                            <span class="label">PAYMENT MODE:</span><br>
+                            <strong style="color:var(--delivery-green);">CASH ON DELIVERY (₹${o.total})</strong>
+                        </div>
+
+                        ${!isOut ? 
+                            `<button class="btn btn-pickup" onclick="updateOrder(${o.order_id}, 'PICKUP')">CONFIRM PICKUP</button>` : 
+                            `<button class="btn btn-deliver" onclick="updateOrder(${o.order_id}, 'DELIVER')">MARK DELIVERED & COLLECT CASH</button>`
+                        }
+                    </div>
+                `;
+            }).join('');
+
+        } catch (e) {
+            console.error("Connection failed");
+        }
+    }
+
+    async function updateOrder(orderId, action) {
+        try {
+            const res = await fetch(`${API_BASE}/rider/action`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ order_id: orderId, action: action })
+            });
+            if (res.ok) refreshRiderApp();
+        } catch (e) {
+            alert("Network error. Action failed.");
+        }
+    }
+
+    // Auto-refresh every 4 seconds
+    setInterval(refreshRiderApp, 4000);
+    window.onload = refreshRiderApp;
+</script>
+
+</body>
+</html>
