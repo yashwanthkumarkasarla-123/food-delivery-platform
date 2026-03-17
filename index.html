@@ -3,228 +3,362 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warangal Eats | Customer App</title>
+    <title>Warangal Eats | Food Delivery</title>
     <style>
-        :root { --swiggy-orange: #fc8019; --dark-text: #282c3f; --green: #60b246; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f4f4; color: var(--dark-text); transition: 0.3s; }
-        
-        /* Navbar */
-        nav { background: white; padding: 15px 10%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
-        .logo { font-size: 24px; font-weight: bold; color: var(--swiggy-orange); text-decoration: none; }
-        .cart-btn { background: var(--swiggy-orange); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .cart-btn:hover { background: #e67312; transform: scale(1.05); }
-
-        /* Layout */
-        .container { padding: 20px 10%; min-height: 80vh; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
-        
-        /* Restaurant Card */
-        .card { background: white; border-radius: 12px; overflow: hidden; transition: 0.3s; cursor: pointer; border: 1px solid #eee; }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        .card img { width: 100%; height: 160px; object-fit: cover; }
-        .card-content { padding: 15px; }
-
-        /* Menu View */
-        #menu-view { display: none; background: white; padding: 30px; border-radius: 12px; animation: fadeIn 0.4s; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .menu-item { display: flex; justify-content: space-between; padding: 18px 0; border-bottom: 1px solid #f1f1f1; align-items: center; }
-        .add-btn { border: 1px solid #bebfc5; color: var(--green); background: white; padding: 7px 25px; font-weight: bold; cursor: pointer; border-radius: 4px; transition: 0.2s; }
-        .add-btn:hover { background: #f0faf0; border-color: var(--green); }
-        .back-link { color: #666; cursor: pointer; margin-bottom: 25px; display: inline-block; font-weight: 500; }
-        .back-link:hover { color: var(--swiggy-orange); }
-
-        /* Tracking Box */
-        #tracking-box { 
-            position: fixed; bottom: 25px; right: 25px; width: 320px; background: white; 
-            padding: 20px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); 
-            display: none; border-left: 6px solid var(--swiggy-orange); z-index: 2000;
+        /* --- DESIGN SYSTEM --- */
+        :root { 
+            --swiggy-orange: #fc8019; 
+            --dark-text: #282c3f; 
+            --p-green: #60b246; 
+            --bg-gray: #f4f7f6;
         }
-        .progress-bar { height: 10px; background: #f0f0f0; border-radius: 5px; margin: 15px 0; overflow: hidden; }
-        #progress-fill { height: 100%; width: 10%; background: var(--swiggy-orange); transition: 1.5s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            margin: 0; 
+            background: var(--bg-gray); 
+            color: var(--dark-text); 
+            padding-bottom: 80px; /* Space for the floating cart bar */
+        }
+        
+        /* --- NAVIGATION --- */
+        .nav { 
+            background: white; 
+            padding: 15px 5%; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+        }
+
+        .logo { 
+            font-size: 24px; 
+            font-weight: bold; 
+            color: var(--swiggy-orange); 
+            cursor: pointer; 
+            letter-spacing: -1px; 
+        }
+        
+        .container { padding: 20px 5%; max-width: 1200px; margin: auto; }
+
+        /* --- RESTAURANT GRID --- */
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+            gap: 25px; 
+            margin-top: 20px; 
+        }
+
+        .card { 
+            background: white; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            transition: 0.3s; 
+            cursor: pointer; 
+            border: 1px solid #eee; 
+        }
+
+        .card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
+        }
+
+        .card-img { 
+            height: 160px; 
+            background: #e0e0e0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: #888; 
+            font-size: 40px; 
+            font-weight: bold; 
+        }
+
+        .card-info { padding: 15px; }
+
+        /* --- MENU VIEW --- */
+        #menu-view { display: none; background: white; padding: 30px; border-radius: 12px; min-height: 400px; }
+        
+        .menu-item { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 20px 0; 
+            border-bottom: 1px solid #f1f1f1; 
+            align-items: center; 
+        }
+
+        .btn-add { 
+            border: 1px solid #bebfc5; 
+            background: white; 
+            color: var(--p-green); 
+            padding: 8px 30px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            border-radius: 4px; 
+        }
+
+        /* --- TRACKING BOX --- */
+        #tracking-box { 
+            display: none; 
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px; 
+            width: 320px; 
+            background: white; 
+            padding: 25px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15); 
+            border-top: 6px solid var(--swiggy-orange); 
+            z-index: 2000;
+        }
+
+        .progress { background: #eee; height: 10px; border-radius: 5px; margin: 20px 0; overflow: hidden; }
+        
+        #fill { 
+            background: var(--swiggy-orange); 
+            height: 100%; 
+            width: 0%; 
+            transition: 1.5s ease-in-out; 
+        }
+        
+        /* --- CART BAR --- */
+        .cart-bar { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            background: var(--p-green); 
+            color: white; 
+            padding: 18px 5%; 
+            display: none; 
+            justify-content: space-between; 
+            align-items: center; 
+            cursor: pointer; 
+            font-weight: bold; 
+            z-index: 1000; 
+        }
+
+        /* Live Indicator Animation */
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        .live-dot { height: 10px; width: 10px; background: var(--swiggy-orange); border-radius: 50%; display: inline-block; margin-right: 8px; animation: pulse 1.5s infinite; }
     </style>
 </head>
 <body>
 
-<nav>
-    <a href="index.html" class="logo">Warangal Eats</a>
-    <button class="cart-btn" onclick="showCheckout()">Cart (<span id="cart-count">0</span>)</button>
-</nav>
+<div class="nav">
+    <div class="logo" onclick="location.reload()">Warangal Eats</div>
+    <div id="user-display" style="font-size: 14px; font-weight: bold; color: #666;"></div>
+</div>
 
 <div class="container">
-    <div id="restaurant-view">
-        <h2 style="margin-bottom: 25px; letter-spacing: -0.5px;">Explore Restaurants in Warangal</h2>
-        <div class="grid" id="restaurant-list">
-            <p>Loading the best local spots...</p>
-        </div>
+    <div id="home-view">
+        <h2 style="font-size: 28px; margin-bottom: 5px;">Warangal's Best Kitchens</h2>
+        <p style="color: #666; margin-bottom: 30px;">Choose a restaurant to start your order</p>
+        <div id="restaurant-grid" class="grid">Loading available restaurants...</div>
     </div>
 
     <div id="menu-view">
-        <span class="back-link" onclick="goBack()">← Back to Restaurants</span>
-        <h2 id="menu-title" style="margin-top: 0;">Restaurant Name</h2>
-        <div id="menu-items-list"></div>
+        <button onclick="showHome()" style="border:none; background:none; color:var(--swiggy-orange); font-weight:bold; cursor:pointer; margin-bottom:25px; font-size: 16px;">← Back to Restaurants</button>
+        <h1 id="menu-res-name" style="margin-bottom: 10px;">Menu</h1>
+        <div id="menu-items"></div>
     </div>
+</div>
+
+<div id="cart-bar" class="cart-bar" onclick="placeOrder()">
+    <span id="cart-count">0 Items</span>
+    <span>PLACE ORDER (CASH ON DELIVERY) →</span>
 </div>
 
 <div id="tracking-box">
-    <div style="display:flex; justify-content: space-between; align-items: center;">
-        <h4 style="margin:0">Live Order Tracking</h4>
-        <button onclick="this.parentElement.parentElement.style.display='none'" style="background:none; border:none; cursor:pointer; color:#ccc;">✕</button>
+    <h3 style="margin:0"><span class="live-dot"></span>Live Tracking</h3>
+    <p id="status-text" style="color:var(--swiggy-orange); font-weight:bold; margin-top:10px;">Updating status...</p>
+    
+    <div class="progress">
+        <div id="fill"></div>
     </div>
-    <p id="status-text" style="font-size: 14px; color: #666; margin: 12px 0;">Connecting to kitchen...</p>
-    <div class="progress-bar"><div id="progress-fill"></div></div>
-    <small id="rider-tag" style="color: var(--swiggy-orange); font-weight: bold;"></small>
+    
+    <div style="display: flex; justify-content: space-between; font-size: 13px; color: #777;">
+        <span><strong>Total Amount:</strong></span>
+        <span id="order-total-display" style="color: #222; font-weight: bold;"></span>
+    </div>
+    <p style="font-size: 11px; color: #999; margin-top: 15px; text-align: center; border-top: 1px solid #eee; padding-top: 10px;">Pay the Rider via Cash/UPI on arrival.</p>
 </div>
 
 <script>
-    // --- CONFIGURATION ---
+    // --- 1. CONFIGURATION ---
     const API_BASE = 'https://restaurant-app.grayplant-35e8185c.centralus.azurecontainerapps.io';
-    
-    // --- STATE MANAGEMENT ---
+    let cart = [];
+    let activeResId = null;
     let allRestaurants = [];
-    let cart = JSON.parse(localStorage.getItem('userCart')) || []; // Cart Recovery
-    let currentResId = sessionStorage.getItem('lastViewedResId') || null; // <--- SESSION RECOVERY FIX
-    let activeOrderId = null;
 
-    // --- INITIALIZATION ---
-    window.onload = async () => {
-        updateCartCountUI();
-        await loadApp();
-        
-        // If the user refreshed while on a menu, go back to that menu
-        if (currentResId && allRestaurants.length > 0) {
-            openMenu(parseInt(currentResId));
-        }
-    };
-
-    async function loadApp() {
+    // --- 2. RESTAURANT DATA FETCHING ---
+    async function loadRestaurants() {
         try {
             const res = await fetch(`${API_BASE}/restaurants`);
             allRestaurants = await res.json();
-            displayRestaurants(allRestaurants);
-        } catch (e) {
-            document.getElementById('restaurant-list').innerHTML = "Backend is waking up (Azure Cold Start). Please refresh in 10 seconds.";
+            const grid = document.getElementById('restaurant-grid');
+            
+            grid.innerHTML = allRestaurants.map(r => `
+                <div class="card" onclick="showMenu(${r.id})">
+                    <div class="card-img">${r.name.charAt(0)}</div>
+                    <div class="card-info">
+                        <strong style="font-size: 18px;">${r.name}</strong><br>
+                        <div style="color:#666; margin: 5px 0; font-size: 13px;">${r.tags.join(' • ')}</div>
+                        <div style="font-size: 12px; color: #999;">📍 ${r.location}</div>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) { 
+            console.error("API Connection Error");
+            document.getElementById('restaurant-grid').innerHTML = "<p>Unable to connect to server. Please try again later.</p>";
         }
     }
 
-    // --- VIEW LOGIC ---
-    function displayRestaurants(data) {
-        const list = document.getElementById('restaurant-list');
-        list.innerHTML = data.map(res => `
-            <div class="card" onclick="openMenu(${res.id})">
-                <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400" alt="food">
-                <div class="card-content">
-                    <h3 style="margin:0">${res.name}</h3>
-                    <p style="color:#666; font-size:14px; margin: 8px 0;">${res.tags.join(', ')}</p>
-                    <p style="font-weight: 600; font-size: 14px;">⭐ ${res.rating} • ${res.location}</p>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function openMenu(id) {
-        currentResId = id;
-        sessionStorage.setItem('lastViewedResId', id); // <--- BULLETPROOF SAFETY LINE
-        
+    // --- 3. MENU NAVIGATION ---
+    function showMenu(id) {
+        activeResId = id;
         const res = allRestaurants.find(r => r.id === id);
-        if(!res) return;
-
-        document.getElementById('restaurant-view').style.display = 'none';
+        
+        document.getElementById('home-view').style.display = 'none';
         document.getElementById('menu-view').style.display = 'block';
-        document.getElementById('menu-title').innerText = res.name;
+        document.getElementById('menu-res-name').innerText = res.name;
+        
+        // Mock items (In a real app, these would come from your database)
+        const items = [
+            { name: "Special Chicken Biryani", price: 280 },
+            { name: "Family Pack Mandi", price: 750 },
+            { name: "Paneer Butter Masala", price: 210 },
+            { name: "Butter Naan", price: 40 }
+        ];
 
-        const menuList = document.getElementById('menu-items-list');
-        menuList.innerHTML = res.menu.map(item => `
+        document.getElementById('menu-items').innerHTML = items.map(i => `
             <div class="menu-item">
-                <div>
-                    <strong style="font-size:16px;">${item.item}</strong><br>
-                    <span style="color: #555;">₹${item.price}</span>
-                </div>
-                <button class="add-btn" onclick="addToCart('${item.item}', ${item.price})">ADD</button>
+                <div><strong>${i.name}</strong><br>₹${i.price}</div>
+                <button class="btn-add" onclick="addToCart('${i.name}', ${i.price})">ADD</button>
             </div>
         `).join('');
-        window.scrollTo(0,0);
+        window.scrollTo(0, 0);
     }
 
-    function goBack() {
-        document.getElementById('restaurant-view').style.display = 'block';
-        document.getElementById('menu-view').style.display = 'none';
-        sessionStorage.removeItem('lastViewedResId');
-        currentResId = null;
-    }
-
-    // --- CART & ORDER LOGIC ---
+    // --- 4. CART LOGIC ---
     function addToCart(name, price) {
         cart.push({ name, price });
-        localStorage.setItem('userCart', JSON.stringify(cart));
-        updateCartCountUI();
-    }
-
-    function updateCartCountUI() {
-        document.getElementById('cart-count').innerText = cart.length;
-    }
-
-    async function showCheckout() {
-        if (cart.length === 0) return alert("Your cart is empty! Choose some Warangal delicacies first.");
         const total = cart.reduce((sum, item) => sum + item.price, 0);
         
-        if (confirm(`Confirm Order: ₹${total}?`)) {
-            try {
-                const response = await fetch(`${API_BASE}/orders`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        items: cart,
-                        total: total,
-                        res_id: parseInt(currentResId) // Connects to specific Partner Dashboard
-                    })
-                });
-                
-                const data = await response.json();
-                activeOrderId = data.order_id;
-                
-                alert("Order Successfully Placed!");
-                cart = [];
-                localStorage.removeItem('userCart');
-                updateCartCountUI();
-                startTracking();
-            } catch (e) {
-                alert("Checkout failed. Make sure the Azure API is running.");
+        document.getElementById('cart-bar').style.display = 'flex';
+        document.getElementById('cart-count').innerText = `${cart.length} Item(s) | ₹${total}`;
+    }
+
+    // --- 5. ORDER SUBMISSION ---
+    async function placeOrder() {
+        const total = cart.reduce((sum, item) => sum + item.price, 0);
+        
+        // Prompt user for details (Simple way to handle checkout for demo)
+        const userName = prompt("Enter your name:", localStorage.getItem('user_name') || "Yashwanth");
+        const userAddr = prompt("Enter delivery address:", localStorage.getItem('user_addr') || "Hanamkonda, Warangal");
+
+        if (!userName || !userAddr) return;
+
+        // Save to localStorage so user doesn't have to type it next time
+        localStorage.setItem('user_name', userName);
+        localStorage.setItem('user_addr', userAddr);
+
+        try {
+            const response = await fetch(`${API_BASE}/orders`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    res_id: activeResId,
+                    customer_name: userName,
+                    address: userAddr,
+                    items: cart,
+                    total: total
+                })
+            });
+
+            const order = await response.json();
+            if (order.order_id) {
+                // Save active order ID to keep tracking active after page refresh
+                localStorage.setItem('active_order_id', order.order_id);
+                cart = []; // Reset local cart
+                startTracking(order.order_id);
             }
+        } catch (e) {
+            alert("Failed to place order. Check your internet connection.");
         }
     }
 
-    // --- LIVE TRACKING ---
-    function startTracking() {
+    // --- 6. POLLING & TRACKING LOGIC ---
+    function startTracking(orderId) {
+        // Reset UI to show Home and the Tracking Widget
+        document.getElementById('cart-bar').style.display = 'none';
+        document.getElementById('home-view').style.display = 'block';
+        document.getElementById('menu-view').style.display = 'none';
         document.getElementById('tracking-box').style.display = 'block';
-        const interval = setInterval(async () => {
-            if (!activeOrderId) return clearInterval(interval);
-            
+        
+        // Poll the server every 4 seconds for status updates
+        const pollInterval = setInterval(async () => {
             try {
-                const res = await fetch(`${API_BASE}/order-status/${activeOrderId}`);
+                const res = await fetch(`${API_BASE}/order-status/${orderId}`);
                 const data = await res.json();
                 
-                const statusLabel = document.getElementById('status-text');
-                const progress = document.getElementById('progress-fill');
-                
-                statusLabel.innerText = data.status.replace(/_/g, " ");
+                // Map Backend statuses to UI messages and Progress bar width
+                const statusMap = {
+                    'PENDING_RESTAURANT': { text: 'Waiting for restaurant...', fill: '15%', color: '#fc8019' },
+                    'PREPARING': { text: 'Kitchen is preparing food...', fill: '45%', color: '#fc8019' },
+                    'READY_FOR_PICKUP': { text: 'Food ready! Finding rider...', fill: '65%', color: '#fc8019' },
+                    'OUT_FOR_DELIVERY': { text: 'Rider is on the way!', fill: '85%', color: '#60b246' },
+                    'DELIVERED': { text: 'Order Delivered! (Paid COD)', fill: '100%', color: '#60b246' },
+                    'REJECTED': { text: 'Order was rejected by kitchen.', fill: '0%', color: 'red' }
+                };
 
-                // UI Progress Steps
-                if (data.status === 'PREPARING') progress.style.width = '45%';
-                if (data.status === 'OUT_FOR_DELIVERY') {
-                    progress.style.width = '85%';
-                    document.getElementById('rider-tag').innerText = "🛵 Delivery Hero is on the way!";
+                const current = statusMap[data.status] || { text: 'Processing...', fill: '5%', color: '#fc8019' };
+                
+                // Update UI elements
+                document.getElementById('status-text').innerText = current.text;
+                document.getElementById('status-text').style.color = current.color;
+                document.getElementById('fill').style.width = current.fill;
+                document.getElementById('fill').style.background = current.color;
+                document.getElementById('order-total-display').innerText = `₹${data.total}`;
+
+                // Handle terminal states (End polling)
+                if (data.status === 'DELIVERED' || data.status === 'REJECTED') {
+                    clearInterval(pollInterval);
+                    setTimeout(() => {
+                        localStorage.removeItem('active_order_id');
+                        if (data.status === 'REJECTED') {
+                            alert("Sorry, the restaurant cannot take your order right now.");
+                            document.getElementById('tracking-box').style.display = 'none';
+                        }
+                    }, 5000);
                 }
-                if (data.status === 'DELIVERED') {
-                    progress.style.width = '100%';
-                    statusLabel.innerText = "Food has arrived! 🎉";
-                    clearInterval(interval);
-                }
-            } catch (e) {
-                console.log("Polling status...");
+            } catch (e) { 
+                console.log("Syncing with server..."); 
             }
-        }, 3000);
+        }, 4000);
     }
+
+    function showHome() {
+        document.getElementById('home-view').style.display = 'block';
+        document.getElementById('menu-view').style.display = 'none';
+    }
+
+    // --- 7. ON PAGE LOAD ---
+    window.onload = () => {
+        loadRestaurants();
+        
+        // Resume tracking if there's an active order in localStorage
+        const savedOrderId = localStorage.getItem('active_order_id');
+        if (savedOrderId) startTracking(savedOrderId);
+
+        // Display user name if available
+        const savedName = localStorage.getItem('user_name');
+        if (savedName) document.getElementById('user-display').innerText = `Hi, ${savedName}`;
+    };
 </script>
+
 </body>
 </html>
