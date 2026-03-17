@@ -10,36 +10,37 @@
             --p-green: #60b246; 
             --dark-blue: #282c3f; 
             --bg-gray: #f4f7f6; 
+            --reject-red: #ff4757;
         }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg-gray); margin: 0; padding: 0; }
         
-        /* Navbar */
         .nav { 
             background: var(--dark-blue); color: white; padding: 15px 5%; 
             display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             position: sticky; top: 0; z-index: 1000;
         }
 
         .container { padding: 30px 5%; max-width: 1000px; margin: auto; }
 
-        /* Order Cards */
         .order-card { 
             background: white; border-radius: 12px; padding: 25px; 
             box-shadow: 0 6px 15px rgba(0,0,0,0.05); margin-bottom: 20px; 
             display: flex; justify-content: space-between; align-items: center;
             border-left: 6px solid #ccc; transition: 0.3s;
-            animation: fadeIn 0.4s ease-in;
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .order-card.pending { border-left-color: var(--swiggy-orange); }
         .order-card.preparing { border-left-color: var(--p-green); }
         .order-card.ready { border-left-color: #3498db; }
+        .order-card.rejected { border-left-color: var(--reject-red); opacity: 0.7; }
 
         .order-details h3 { margin: 0 0 10px 0; color: #333; }
         .order-details p { margin: 5px 0; color: #666; font-size: 14px; }
-        .customer-name { color: var(--dark-blue); font-weight: bold; }
+        
+        .cod-badge { 
+            background: #fff3e0; color: #e65100; padding: 2px 8px; 
+            border-radius: 4px; font-weight: bold; font-size: 12px;
+        }
 
         .status-tag { 
             display: inline-block; padding: 4px 10px; border-radius: 4px; 
@@ -47,28 +48,16 @@
             background: #eee; margin-left: 10px; color: #555;
         }
 
-        /* Buttons */
         .btn-group { display: flex; gap: 10px; }
         .btn { 
             padding: 12px 20px; border: none; border-radius: 8px; 
             cursor: pointer; font-weight: bold; color: white; transition: 0.2s;
         }
         .btn-accept { background: var(--swiggy-orange); }
-        .btn-accept:hover { background: #e67316; transform: scale(1.02); }
         .btn-ready { background: var(--p-green); }
-        .btn-ready:hover { background: #529a3d; transform: scale(1.02); }
-        .btn-logout { background: transparent; border: 1px solid rgba(255,255,255,0.4); color: white; padding: 8px 15px; font-size: 12px; }
-        .btn-logout:hover { background: rgba(255,255,255,0.1); }
-
-        .empty-state { text-align: center; padding: 60px; color: #888; }
+        .btn-reject { background: transparent; color: var(--reject-red); border: 1px solid var(--reject-red); font-size: 12px; }
         
-        /* Pulse Animation for New Orders */
-        .pulse { animation: pulse-orange 2s infinite; }
-        @keyframes pulse-orange {
-            0% { box-shadow: 0 0 0 0 rgba(252, 128, 25, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(252, 128, 25, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(252, 128, 25, 0); }
-        }
+        .empty-state { text-align: center; padding: 60px; color: #888; }
     </style>
 </head>
 <body>
@@ -76,92 +65,77 @@
 <div class="nav">
     <div>
         <h2 id="res-name-display" style="margin:0">Restaurant Dashboard</h2>
-        <small id="res-id-display" style="opacity: 0.7;">Syncing with Warangal Eats...</small>
+        <small id="res-id-display" style="opacity: 0.7;">Online</small>
     </div>
-    <button class="btn btn-logout" onclick="logout()">LOGOUT</button>
+    <button style="background:none; border:1px solid white; color:white; cursor:pointer; padding:5px 10px; border-radius:4px;" onclick="logout()">Logout</button>
 </div>
 
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-        <h3 style="margin:0; color: var(--dark-blue);">Active Kitchen Queue</h3>
-        <span id="order-count" style="background: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; color: #666; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">0 Orders</span>
+        <h3 style="margin:0;">Kitchen Orders</h3>
+        <span id="order-count">0 Orders</span>
     </div>
     
     <div id="orders-container">
-        <div class="empty-state">Connecting to kitchen server...</div>
+        <div class="empty-state">Loading kitchen queue...</div>
     </div>
 </div>
 
 <script>
-    // 1. INITIAL SETUP
     const API_BASE = 'https://restaurant-app.grayplant-35e8185c.centralus.azurecontainerapps.io';
-    
-    // Retrieve credentials from URL or Session Memory
     const params = new URLSearchParams(window.location.search);
     const resId = params.get('res_id') || localStorage.getItem('active_res_id');
-    const resName = localStorage.getItem('active_res_name') || "Partner";
 
-    // Redirect to login if no ID is found
     if (!resId) {
         window.location.href = 'partner-login.html';
     } else {
-        // Save to local storage so page refresh doesn't break the session
         localStorage.setItem('active_res_id', resId);
-        document.getElementById('res-name-display').innerText = resName;
-        document.getElementById('res-id-display').innerText = `Restaurant ID: ${resId} | Status: Live`;
     }
 
-    // 2. DATA FETCHING
     async function fetchOrders() {
         try {
             const response = await fetch(`${API_BASE}/restaurant/manage-orders/${resId}`);
             const orders = await response.json();
-            
             const container = document.getElementById('orders-container');
-            document.getElementById('order-count').innerText = `${orders.length} Active Orders`;
+            document.getElementById('order-count').innerText = `${orders.length} Active`;
 
             if (orders.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <img src="https://cdn-icons-png.flaticon.com/512/4076/4076402.png" width="60" style="opacity:0.2; margin-bottom:15px;"><br>
-                        <h3>Kitchen is Clear!</h3>
-                        <p>No active orders at the moment. New orders will pop up here.</p>
-                    </div>`;
+                container.innerHTML = `<div class="empty-state"><h3>No active orders</h3></div>`;
                 return;
             }
 
             container.innerHTML = orders.map(o => `
-                <div class="order-card ${o.status === 'PENDING_RESTAURANT' ? 'pending pulse' : (o.status === 'PREPARING' ? 'preparing' : 'ready')}">
+                <div class="order-card ${o.status.toLowerCase()}">
                     <div class="order-details">
-                        <h3>Order #${o.order_id} <span class="status-tag">${o.status.replace(/_/g, ' ')}</span></h3>
-                        <p><strong>Customer:</strong> <span class="customer-name">${o.customer_name || 'Valued Guest'}</span></p>
+                        <h3>Order #${o.order_id} <span class="status-tag">${o.status}</span></h3>
+                        <p><strong>Customer:</strong> ${o.customer_name || 'Guest'}</p>
                         <p><strong>Items:</strong> ${o.items.map(i => i.name).join(', ')}</p>
-                        <p><strong>Bill Amount:</strong> ₹${o.total}</p>
-                        <p style="font-size:12px; color:#999; margin-top:10px;">📍 Deliver to: ${o.delivery_address || 'Warangal Central'}</p>
+                        <p><strong>Bill:</strong> ₹${o.total} <span class="cod-badge">COD</span></p>
+                        <p style="font-size:12px; color:#999;">📍 ${o.delivery_address || 'Warangal'}</p>
                     </div>
                     <div class="btn-group">
                         ${renderActionButtons(o)}
                     </div>
                 </div>
             `).join('');
-        } catch (error) { 
-            console.error("Queue Sync Error:", error); 
-        }
+        } catch (error) { console.error("Fetch error:", error); }
     }
 
-    // 3. ACTION LOGIC
     function renderActionButtons(order) {
         if (order.status === 'PENDING_RESTAURANT') {
-            return `<button class="btn btn-accept" onclick="updateStatus(${order.order_id}, 'ACCEPT')">ACCEPT ORDER</button>`;
+            return `
+                <button class="btn btn-reject" onclick="updateStatus(${order.order_id}, 'REJECT')">Reject</button>
+                <button class="btn btn-accept" onclick="updateStatus(${order.order_id}, 'ACCEPT')">Accept</button>
+            `;
         } else if (order.status === 'PREPARING') {
-            return `<button class="btn btn-ready" onclick="updateStatus(${order.order_id}, 'MARK_READY')">MARK AS READY</button>`;
+            // CRITICAL FIX: Sent 'MARK_READY' to match your Backend exactly
+            return `<button class="btn btn-ready" onclick="updateStatus(${order.order_id}, 'MARK_READY')">Mark As Ready</button>`;
         } else if (order.status === 'READY_FOR_PICKUP') {
-            return `<span style="color:var(--swiggy-orange); font-weight:bold; font-size:14px;">⌛ Waiting for Rider</span>`;
-        } else if (order.status === 'OUT_FOR_DELIVERY') {
-            return `<span style="color:var(--p-green); font-weight:bold; font-size:14px;">🛵 Out for Delivery</span>`;
-        } else {
-            return `<span style="color:#888;">${order.status}</span>`;
+            return `<span style="color:var(--swiggy-orange); font-weight:bold;">⌛ Waiting for Rider</span>`;
+        } else if (order.status === 'REJECTED') {
+            return `<span style="color:red;">Order Rejected</span>`;
         }
+        return `<span style="color:#888;">${order.status}</span>`;
     }
 
     async function updateStatus(orderId, action) {
@@ -173,11 +147,10 @@
             });
             
             if (response.ok) {
-                // Instantly refresh the UI to show the next state
-                fetchOrders();
+                fetchOrders(); // Refresh UI immediately
             }
-        } catch (error) { 
-            alert("Connection error. Could not update order."); 
+        } catch (error) {
+            alert("Connection error.");
         }
     }
 
@@ -186,11 +159,8 @@
         window.location.href = 'partner-login.html';
     }
 
-    // 4. AUTOMATION
-    // Initial fetch
-    fetchOrders();
-    // Poll the server every 5 seconds for new orders
     setInterval(fetchOrders, 5000);
+    window.onload = fetchOrders;
 </script>
 
 </body>
