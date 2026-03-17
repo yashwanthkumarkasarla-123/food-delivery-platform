@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 app = Flask(__name__)
-# Enable CORS for all routes
+# Enable CORS for all routes to allow GitHub Pages to communicate with Azure
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # --- IN-MEMORY DATABASE ---
@@ -24,15 +24,15 @@ def place_order():
     if request.method == "OPTIONS": return jsonify({"status": "ok"}), 200
     data = request.json
     
-    # ADDED: customer_name and delivery_address so the Rider knows where to go
     new_order = {
         "order_id": len(orders) + 1,
         "res_id": data.get("res_id"),
-        "customer_name": data.get("customer_name", "Guest"),
+        "customer_name": data.get("customer_name", "Valued Guest"),
         "delivery_address": data.get("address", "Warangal Central"),
         "status": "PENDING_RESTAURANT",
         "items": data.get("items", []),
         "total": data.get("total", 0),
+        "payment_mode": "Cash on Delivery", # Strictly COD for this update
         "assigned_rider": None
     }
     orders.append(new_order)
@@ -46,6 +46,7 @@ def get_status(order_id):
 # --- RESTAURANT PARTNER ENDPOINTS ---
 @app.route("/restaurant/manage-orders/<int:res_id>", methods=["GET"])
 def manage_orders(res_id):
+    # Only show orders that are not delivered yet
     active = [o for o in orders if o.get("res_id") == res_id and o["status"] != "DELIVERED"]
     return jsonify(active), 200
 
@@ -57,13 +58,17 @@ def restaurant_action():
     
     if order:
         action = data.get('action')
+        
+        # FIXED LOGIC: Strict mapping to prevent accidental rejections
         if action == "ACCEPT":
             order["status"] = "PREPARING"
         elif action == "MARK_READY":
             order["status"] = "READY_FOR_PICKUP"
         elif action == "REJECT":
             order["status"] = "REJECTED"
-        return jsonify({"message": "Status Updated"}), 200
+        
+        return jsonify({"message": f"Status updated to {order['status']}"}), 200
+    
     return jsonify({"error": "Order not found"}), 404
 
 # --- RIDER ENDPOINTS ---
@@ -82,7 +87,7 @@ def rider_action():
     
     if order:
         action = data.get('action')
-        if action == 'PICKUP':
+        if action == 'PICKUP' and order["status"] == "READY_FOR_PICKUP":
             order["status"] = "OUT_FOR_DELIVERY"
             order["assigned_rider"] = "Rajesh Express"
         elif action == 'DELIVER':
